@@ -92,6 +92,18 @@ namespace HealthMed.Domain.Errors
             public static Error InvalidPermissions => new Error(
                 "schedule.InvalidPermissions",
                 "The current user does not have the permissions to perform that operation.");
+
+            public static Error ScheduleInvalid => new Error(
+                 "schedule.ScheduleInvalid",
+                 "Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+
+            public static Error Conflicting => new Error(
+                 "schedule.Conflicting",
+                 "There is a conflicting appointment in the specified period.");
+
+            public static Error NotFound => new Error(
+                "schedule.NotFound",
+                "The schedule with the specified identifier was not found.");
         }
     }
 }
