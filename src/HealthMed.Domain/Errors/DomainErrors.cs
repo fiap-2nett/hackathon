@@ -82,5 +82,16 @@ namespace HealthMed.Domain.Errors
                 "User.NameIsRequired",
                 "The user name is required.");            
         }
+
+        public static class Schedule
+        {
+            public static Error DataSentIsInvalid => new Error(
+                "schedule.DataSentIsInvalid",
+                "The schedule data sent in the request is invalid.");
+
+            public static Error InvalidPermissions => new Error(
+                "schedule.InvalidPermissions",
+                "The current user does not have the permissions to perform that operation.");
+        }
     }
 }
