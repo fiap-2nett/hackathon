@@ -1,0 +1,4 @@
+services:
+  healthmed.api:
+    volumes:
+      - ./docker/aspnet/https:/root/.aspnet/https:ro

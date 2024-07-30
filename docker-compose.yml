@@ -1,0 +1,11 @@
+services:
+  healthmed.db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: healthmed.db
+
+  healthmed.api:
+    image: ${DOCKER_REGISTRY-}healthmed-api
+    container_name: healthmed.api
+    build:
+      context: .
+      dockerfile: src/HealthMed.Api/Dockerfile

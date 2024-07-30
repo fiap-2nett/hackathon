@@ -1,0 +1,28 @@
+services:
+  healthmed.db:
+    volumes:
+      - ./.containers/sqlserver:/var/opt/mssql/data
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=yourStrong(!)Password
+
+  healthmed.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=helpdesk
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/root/.aspnet/https/helpdesk.pfx
+      - ConnectionStrings__HealthMedDb=Server=healthmed.db,1433;Database=HealthMedDb;User=sa;Password=yourStrong(!)Password;Encrypt=False;
+      - Jwt__Issuer=https://healthmed.api/
+      - Jwt__Audience=https://healthmed.api/
+      - Jwt__Security=WvvWzuqwJ5DvDGaRRVnKCuL2k35aEhiY0qoKR7qj0gVn3f6PxwPnhbB2VPp82gLH
+      - Jwt__TokenExpirationInMinutes=60
+    depends_on:
+      - healthmed.db      
+    ports:
+      - "5001:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ./docker/aspnet/https:/root/.aspnet/https:ro-
