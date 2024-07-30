@@ -61,11 +61,12 @@ entendimento da modelagem de dados apresentamos a seguir o MER e suas respectiva
 
 Com base na imagem acima iremos detalhar as tabelas e os dados contidos em cada uma delas:
 
-| Schema | Tabela       | Descrição                                                                                       |
-|--------|--------------|-------------------------------------------------------------------------------------------------|
-| dbo    | users        | Tabela que contém os dados referentes aos usuários (médicos e pacientes da plataforma.          |
-| dbo    | roles        | Tabela que contém os dados referentes aos tipos de perfis de usuário da plataforma.             |
-| dbo    | schedules    | Tabela que contém os dados referentes aos horários de atendimento dos médicos.                  |
-| dbo    | appointments | Tabela que contém os dados referentes as consultas agendadas.                                   |
+| Schema | Tabela            | Descrição                                                                                      |
+|--------|-------------------|------------------------------------------------------------------------------------------------|
+| dbo    | users             | Tabela que contém os dados referentes aos usuários (médicos e pacientes da plataforma.         |
+| dbo    | roles             | Tabela que contém os dados referentes aos tipos de perfis de usuário da plataforma.            |
+| dbo    | schedules         | Tabela que contém os dados referentes aos horários de atendimento dos médicos.                 |
+| dbo    | appointments      | Tabela que contém os dados referentes aos horários de agendamento de consultas.                |
+| dbo    | appointmentstatus | Tabela que contém os dados referentes aos status de agendamentos.                              |
 
 

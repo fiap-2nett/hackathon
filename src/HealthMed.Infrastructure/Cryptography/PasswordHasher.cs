@@ -23,7 +23,9 @@ namespace HealthMed.Infrastructure.Cryptography
         /// </summary>
         public PasswordHasher()
         {
+#pragma warning disable SYSLIB0023 // Type or member is obsolete
             _rng = new RNGCryptoServiceProvider();
+#pragma warning restore SYSLIB0023 // Type or member is obsolete
         }
 
         /// <inheritdoc />
