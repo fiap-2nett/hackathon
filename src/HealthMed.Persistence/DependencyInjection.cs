@@ -20,7 +20,8 @@ namespace HealthMed.Persistence
             services.AddScoped<IDbContext>(serviceProvider => serviceProvider.GetRequiredService<EFContext>());
             services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<EFContext>());
 
-            services.AddScoped<IUserRepository, UserRepository>();            
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
             return services;
         }

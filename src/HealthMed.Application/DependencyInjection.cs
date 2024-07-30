@@ -10,6 +10,7 @@ namespace HealthMed.Application
         {
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IScheduleService, SchedulesService>();
 
             return services;
         }
