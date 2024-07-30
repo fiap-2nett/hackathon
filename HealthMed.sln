@@ -24,21 +24,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 - Domain", "3 - Domain", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4 - Infrastructure", "4 - Infrastructure", "{0C2289DB-6DAE-4F8F-8B7C-8F7F1EB8ED9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Domain", "src\HealthMed.Domain\HealthMed.Domain.csproj", "{3BC553E8-FFCC-4845-B484-BEA121892016}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Domain", "src\HealthMed.Domain\HealthMed.Domain.csproj", "{3BC553E8-FFCC-4845-B484-BEA121892016}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Application", "src\HealthMed.Application\HealthMed.Application.csproj", "{D41DBED8-74D4-4F3A-9B27-75149040E8F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Application", "src\HealthMed.Application\HealthMed.Application.csproj", "{D41DBED8-74D4-4F3A-9B27-75149040E8F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Infrastructure", "src\HealthMed.Infrastructure\HealthMed.Infrastructure.csproj", "{7217560F-190D-47AD-94D5-5B3F74CC7C24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Infrastructure", "src\HealthMed.Infrastructure\HealthMed.Infrastructure.csproj", "{7217560F-190D-47AD-94D5-5B3F74CC7C24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Persistence", "src\HealthMed.Persistence\HealthMed.Persistence.csproj", "{31914C30-537A-4345-B429-BC2A3351ACCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Persistence", "src\HealthMed.Persistence\HealthMed.Persistence.csproj", "{31914C30-537A-4345-B429-BC2A3351ACCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Api", "src\HealthMed.Api\HealthMed.Api.csproj", "{DE378DBA-4E91-4CC7-82DA-411E910EF67C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Api", "src\HealthMed.Api\HealthMed.Api.csproj", "{DE378DBA-4E91-4CC7-82DA-411E910EF67C}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4C49F706-6DF8-448C-ABD7-F4F8DA157E2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.Application.UnitTests", "tests\HealthMed.Application.UnitTests\HealthMed.Application.UnitTests.csproj", "{55835ABF-7578-4A81-97D5-2B511C8B13AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.Application.UnitTests", "tests\HealthMed.Application.UnitTests\HealthMed.Application.UnitTests.csproj", "{55835ABF-7578-4A81-97D5-2B511C8B13AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMed.ArchitectureTests", "tests\HealthMed.ArchitectureTests\HealthMed.ArchitectureTests.csproj", "{912228F4-AB84-47AD-B314-D8001157AFD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMed.ArchitectureTests", "tests\HealthMed.ArchitectureTests\HealthMed.ArchitectureTests.csproj", "{912228F4-AB84-47AD-B314-D8001157AFD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
