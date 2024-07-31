@@ -104,6 +104,10 @@ namespace HealthMed.Domain.Errors
             public static Error NotFound => new Error(
                 "schedule.NotFound",
                 "The schedule with the specified identifier was not found.");
+
+            public static Error DifferentDate => new Error(
+                    "schedule.DifferentDate",
+                    "The start date cannot be different from the end date.");
         }
 
         public static class Appointment
