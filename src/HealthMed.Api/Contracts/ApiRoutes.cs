@@ -10,6 +10,13 @@ namespace HealthMed.Api.Contracts
             public const string Register = "authentication/register";
         }
 
+        public static class Users
+        {
+            public const string Insert = "users";
+            public const string GetById = "users/{idUser:int}";
+            public const string GetByEmail = "users/email/{email}";
+        }
+          
         public static class Schedule
         {
             public const string GetAll = "schedules";

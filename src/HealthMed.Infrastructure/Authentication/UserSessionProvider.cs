@@ -22,7 +22,6 @@ namespace HealthMed.Infrastructure.Authentication
 
             IdUser = idUser;
         }
-
         #endregion
     }
 }
