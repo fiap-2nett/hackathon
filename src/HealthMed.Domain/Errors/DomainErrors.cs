@@ -94,5 +94,47 @@ namespace HealthMed.Domain.Errors
                 "User.InvalidCRM",
                 "The informed CRM is invalid.");
         }
+
+        public static class Schedule
+        {
+            public static Error DataSentIsInvalid => new Error(
+                "schedule.DataSentIsInvalid",
+                "The schedule data sent in the request is invalid.");
+
+            public static Error InvalidPermissions => new Error(
+                "schedule.InvalidPermissions",
+                "The current user does not have the permissions to perform that operation.");
+
+            public static Error ScheduleInvalid => new Error(
+                 "schedule.ScheduleInvalid",
+                 "Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+
+            public static Error Conflicting => new Error(
+                 "schedule.Conflicting",
+                 "There is a conflicting appointment in the specified period.");
+
+            public static Error NotFound => new Error(
+                "schedule.NotFound",
+                "The schedule with the specified identifier was not found.");
+
+            public static Error DifferentDate => new Error(
+                    "schedule.DifferentDate",
+                    "The start date cannot be different from the end date.");
+        }
+
+        public static class Appointment
+        {
+            public static Error NotFound => new Error(
+                "Appointment.NotFound",
+                "The appointment with the specified identifier was not found.");
+
+            public static Error CannotBeReserved => new Error(
+                "Appointment.CannotBeReserved",
+                "The appointment is already booked for another patient.");
+
+            public static Error Overlap = new Error(
+                "Appointment.Overlap",
+                "There was an overlap in appointments, please check availability.");
+        }
     }
 }
