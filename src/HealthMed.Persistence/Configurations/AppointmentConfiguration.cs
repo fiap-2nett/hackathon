@@ -13,13 +13,14 @@ namespace HealthMed.Persistence.Configurations
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).HasColumnName("IdAppointment").IsRequired();
             builder.Property(p => p.IdDoctor).IsRequired();
-            builder.Property(p => p.IdPatient).IsConcurrencyToken();
+            builder.Property(p => p.IdPatient);
             builder.Property(p => p.AppointmentDate).IsRequired();
             builder.Property(p => p.HasBeenNotified).IsRequired();
             builder.Property(p => p.IdAppointmentStatus).IsRequired();
             builder.Property(p => p.CanceledAt);
             builder.Property(p => p.CreatedAt).IsRequired();
             builder.Property(p => p.LastUpdatedAt);
+            builder.Property<byte[]>("Version").IsRowVersion();
 
             builder.HasOne<User>()
                 .WithMany()

@@ -22,6 +22,7 @@ namespace HealthMed.Persistence
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IScheduleRepository, ScheduleRepository>();
+            services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
             return services;
         }
