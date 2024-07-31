@@ -6,6 +6,14 @@ A Health&Med API é uma plataforma que conecta médicos e pacientes possibilitan
 de forma rápida e assertiva. A plataforma ainda possibilita aos médicos a customização de horários disponíveis
 para consultas.
 
+## Documentação de Requisitos
+
+A documentação de Requisitos Funcionais (RF), Não Funcionais (RNF) e
+entregáveis esperados neste Hackathon foi disponibilizada pelos
+Stakeholders da Health&Med e pode ser encontrada em.:
+
+[Documentação de Requisitos](https://github.com/fiap-2nett/hackathon/blob/main/doc/Hackathon%20-%20Turma%20.NET.pdf)
+
 ## Colaboradores
 
 - [Ailton Alves de Araujo](https://www.linkedin.com/in/ailton-araujo-b4ba0520/) - RM350781
