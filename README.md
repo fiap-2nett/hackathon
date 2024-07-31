@@ -85,6 +85,12 @@ raíz do projeto e execute o seguinte comando:
 $ docker compose up -d
 ```
 
+Após rodar o projeto a iteração pode ser feita via Swagger pelo link abaixo.:
+
+https://localhost:5001/swagger/index.html
+
+![Swagger](doc/assets/img/swagger.png)
+
 
 ## CI/CD Pipeline
 
@@ -93,7 +99,6 @@ processos envolvidos no desenvolvimento da plataforma com foco na integração c
 pelos membros da equipe (CI) e a disponibilização e implantação do software em ambiente de produção (CD),
 incluso neste processo a execução de Testes Unitários e Arquiteturais garantindo sempre
 a integridade da solução.:
-
 
 ![CI/CD Pipeline](doc/assets/img/pipeline.png)
 
