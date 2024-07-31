@@ -10,6 +10,7 @@ using HealthMed.Infrastructure.Cryptography;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -150,6 +151,113 @@ namespace HealthMed.Application.UnitTests.Scenarios
 
         #region Update
 
+        /// <summary>
+        /// Teste: Atualização bem-sucedida de um agendamento existente
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_Should_Update_Schedule_Successfully()
+        {
+            // Arrange
+            var user = GetUserDoctor();
+            var schedule = GetScheduleValid();
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
+            _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(schedule.Id)).ReturnsAsync(schedule);
+            _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _appointmentRepositoryMock.Setup(x => x.GetByAppointment(It.IsAny<Appointment>())).ReturnsAsync((Appointment)null);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
+
+            // Act
+            var result = await _schedulesService.Update(user.Id, schedule.IdDoctor, schedule.StartDate, schedule.EndDate);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(schedule.Id, result.Id);
+            Assert.Equal(schedule.StartDate, result.StartDate);
+            Assert.Equal(schedule.EndDate, result.EndDate);
+        }
+
+        /// <summary>
+        /// Teste: Erro ao atualizar um agendamento para um usuário não encontrado
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_Should_Throw_NotFoundException_For_NonExistent_User()
+        {
+            // Arrange
+            var userId = 1;
+            var scheduleId = 1;
+            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
+            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((User)null);
+
+            // Act & Assert
+            var messsage =  await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(userId, scheduleId, startDate, endDate));
+            messsage.Equals("The user with the specified identifier was not found.");
+        }
+
+        /// <summary>
+        /// Teste: Erro ao atualizar um agendamento que não existe
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_Should_Throw_NotFoundException_For_NonExistent_Schedule()
+        {
+            // Arrange
+            var scheduleId = 1;
+            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
+            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var user = GetUserDoctor();
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
+            _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(scheduleId)).ReturnsAsync((Schedule)null);
+
+            // Act & Assert
+            var message = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(user.Id, scheduleId, startDate, endDate));
+            message.Equals("The schedule with the specified identifier was not found.");
+        }
+
+        /// <summary>
+        /// Teste: Erro ao atualizar um agendamento com horários inválidos
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_Should_Throw_DomainException_For_Invalid_Schedule()
+        {
+            // Arrange
+            var startDate = RoundToNearestHour(DateTime.Now.AddHours(-1)); // Início no passado
+            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var user = GetUserDoctor();
+            var schedule = GetScheduleInvalid();
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
+            _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(schedule.Id)).ReturnsAsync(schedule);
+
+            // Act & Assert
+            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(user.Id, schedule.Id, startDate, endDate));
+            message.Equals("Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+        }
+
+        /// <summary>
+        /// Teste: Erro ao atualizar com conflito de horário
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_Should_Throw_DomainException_For_Schedule_Conflict()
+        {
+            // Arrange
+            var userId = 1;
+            var scheduleId = 1;
+            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
+            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var user = GetUserDoctor();
+            var schedule = GetScheduleInvalid();
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
+            _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(scheduleId)).ReturnsAsync(schedule);
+            _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(userId, scheduleId, startDate, endDate)).ReturnsAsync(true);
+
+            // Act & Assert
+            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(userId, scheduleId, startDate, endDate));
+            message.Equals("There is a conflicting appointment in the specified period.");
+        }
 
 
         #endregion
@@ -161,9 +269,17 @@ namespace HealthMed.Application.UnitTests.Scenarios
         (
             idSchedule: 1,
             idDoctor: 1,
-            startDate: DateTime.UtcNow.AddHours(1),
-            endDate: DateTime.UtcNow.AddHours(3)
+            startDate: RoundToNearestHour(DateTime.UtcNow.AddHours(1)),
+            endDate: RoundToNearestHour(DateTime.UtcNow.AddHours(3))
         );
+        private ScheduleTest GetScheduleInvalid() => new ScheduleTest
+        (
+            idSchedule: 2,
+            idDoctor: 1,
+            startDate: RoundToNearestHour(DateTime.UtcNow.AddHours(-1)),
+            endDate: RoundToNearestHour(DateTime.UtcNow.AddHours(3))
+        );
+
         private DateTime RoundToNearestHour(DateTime dateTime)
         {
             return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, 0, 0);
