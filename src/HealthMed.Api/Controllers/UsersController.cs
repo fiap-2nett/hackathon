@@ -72,8 +72,13 @@ public class UsersController : ApiController
     [HttpGet(ApiRoutes.Users.GetById)]
     [ProducesResponseType(typeof(DetailedUserResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById([FromRoute] int idUser)
-        => Ok(await _userService.GetUserByIdAsync(idUser));
-    
+    {
+        var response = await _userService.GetUserByIdAsync(idUser);
+        if (response is null) return NotFound();
+
+        return Ok(response);
+    }
+
     /// <summary>
     /// Represents the query for getting a user by its email.
     /// </summary>
@@ -81,7 +86,12 @@ public class UsersController : ApiController
     [HttpGet(ApiRoutes.Users.GetByEmail)]
     [ProducesResponseType(typeof(DetailedUserResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByEmail([FromRoute] string email)
-        => Ok(await _userService.GetUserByEmailAsync(email));
+    {
+        var response = await _userService.GetUserByEmailAsync(email);
+        if (response is null) return NotFound();
+
+        return Ok(response);
+    }
 
     #endregion
 

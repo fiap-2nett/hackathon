@@ -1,9 +1,6 @@
 using System;
 using System.Linq;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using HealthMed.Application.Contracts.Authentication;
 using HealthMed.Application.Contracts.Users;
 using HealthMed.Application.Core.Abstractions.Authentication;
 using HealthMed.Application.Core.Abstractions.Cryptography;
@@ -14,9 +11,8 @@ using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
 using HealthMed.Domain.Repositories;
-using HealthMed.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using static HealthMed.Domain.Errors.DomainErrors;
+using Microsoft.SqlServer.Server;
 
 namespace HealthMed.Application.Services
 {
@@ -71,58 +67,47 @@ namespace HealthMed.Application.Services
         }
 
         public async Task<DetailedUserResponse> GetUserByEmailAsync(string email)
-        { 
-            var userList = await _dbContext.Set<Domain.Entities.User, int>().AsNoTracking().ToListAsync();
-            var user = userList.FirstOrDefault(u => u.Email == email);
+        {
+            IQueryable<DetailedUserResponse> userQuery = (
+                from user in _dbContext.Set<User, int>().AsNoTracking()
+                join role in _dbContext.Set<Role, byte>().AsNoTracking()
+                    on user.IdRole equals role.Id
+                where user.Email.Value == email
+                select new DetailedUserResponse
+                {
+                    IdUser = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Cpf = user.CPF,
+                    Crm = user.CRM,
+                    Role = role != null ? new RoleResponse { IdRole = role.Id, Name = role.Name } : null,
+                    CreatedAt = user.CreatedAt,
+                    LastUpdatedAt = user.LastUpdatedAt
+                });
 
-            if (user == null)
-                throw new NotFoundException(DomainErrors.User.NotFound);
-
-            var role = await _dbContext.Set<Role, byte>().AsNoTracking()
-                    .FirstOrDefaultAsync(r => Convert.ToByte(r.IdRole) == user.IdRole);
-
-            var detailedUserResponse = new DetailedUserResponse
-            {
-                IdUser = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Cpf = user.CPF,
-                Crm = user.CRM,
-                Role = role != null ? new RoleResponse { IdRole = Convert.ToByte(role.IdRole), Name = role.Name } : null,
-                CreatedAt = user.CreatedAt,
-                LastUpdatedAt = user.LastUpdatedAt
-            };
-
-            return detailedUserResponse;
+            return await userQuery.FirstOrDefaultAsync();
         }
 
         public async Task<DetailedUserResponse> GetUserByIdAsync(int idUser)
         {
+            IQueryable<DetailedUserResponse> userQuery = (
+                from user in _dbContext.Set<User, int>().AsNoTracking()
+                join role in _dbContext.Set<Role, byte>().AsNoTracking()
+                    on user.IdRole equals role.Id
+                where user.Id == idUser
+                select new DetailedUserResponse
+                {
+                    IdUser = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Cpf = user.CPF,
+                    Crm = user.CRM,
+                    Role = role != null ? new RoleResponse { IdRole = role.Id, Name = role.Name } : null,
+                    CreatedAt = user.CreatedAt,
+                    LastUpdatedAt = user.LastUpdatedAt
+                });
 
-           var user = await _dbContext.Set<Domain.Entities.User, int>()
-                            .AsNoTracking()
-                            .FirstOrDefaultAsync(u => u.Id == idUser);
-
-            if (user is null)
-                throw new NotFoundException(DomainErrors.User.NotFound);
-
-            var role = await _dbContext.Set<Role, byte>()
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(r => Convert.ToByte(r.IdRole) == user.IdRole);
-
-            var detailedUserResponse = new DetailedUserResponse
-            {
-                IdUser = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Cpf = user.CPF,
-                Crm = user.CRM,
-                Role = role != null ? new RoleResponse { IdRole = Convert.ToByte(role.IdRole), Name = role.Name } : null,
-                CreatedAt = user.CreatedAt,
-                LastUpdatedAt = user.LastUpdatedAt
-            };
-
-            return detailedUserResponse;
+            return await userQuery.FirstOrDefaultAsync();
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
