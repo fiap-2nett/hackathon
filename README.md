@@ -106,3 +106,21 @@ Além disso, a CI/CD Pipeline é responsável ainda por
 realizar a publicação da imagem do Container da solução no Docker Hub.:
 
 [Link para Imagem no Docker Hub](https://hub.docker.com/repository/docker/techchallengephase2/healthmed-api/general)
+
+Se preferir, os testes também podem ser executados localmente via dotnet CLI. Para isso rode os comandos abaixo.:
+```sh
+$ dotnet test tests/HealthMed.Application.UnitTests/HealthMed.Application.UnitTests.csproj --no-build --verbosity normal
+$ dotnet test tests/HealthMed.ArchitectureTests/HealthMed.ArchitectureTests.csproj --no-build --verbosity normal
+```
+
+Caso queira executar todos os projetos de teste, execute o comando:
+
+```sh
+$ dotnet test HealthMed.sln
+```
+
+Caso queria uma versão de resultado com mais detalhes, execute o seguinte comando:
+
+```sh
+$ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste.csproj>
+```
