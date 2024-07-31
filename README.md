@@ -74,9 +74,16 @@ Toda a infraestrutura necessária para execução da Health&Med API
 deve ser provisionada automaticamente configurando o **"docker-compose"**
 como projeto de inicialização no Visual Studio.:
 
+![Startup Project](doc/assets/img/startup.png)
 
+Também é possível executar a solução diretamente sem a necessidade do Visual Studio,
+para tal, apenas necessitamos do Docker previamente instalado.
+Para executar a solução diretamente através do Docker, abra um terminal no diretório
+raíz do projeto e execute o seguinte comando:
 
-
+```sh
+$ docker compose up -d
+```
 
 
 ## CI/CD Pipeline
