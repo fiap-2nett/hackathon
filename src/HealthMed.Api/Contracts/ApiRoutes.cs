@@ -7,5 +7,12 @@ namespace HealthMed.Api.Contracts
             public const string Login = "authentication/login";
             public const string Register = "authentication/register";
         }
+
+        public static class Users
+        {
+            public const string Insert = "users";
+            public const string GetById = "users/{idUser:int}";
+            public const string GetByEmail = "users/email/{email}";
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace HealthMed.Domain.Entities
     {
         #region Properties
 
+        public string IdRole { get; private set; }
         public string Name { get; private set; }                
 
         #endregion

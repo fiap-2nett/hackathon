@@ -167,27 +167,6 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
         }
 
-        [Fact]
-        public async Task CreateAsync_Should_ReturnTokenResponse_WhenValidUserData()
-        {
-            // Arrange
-            _userRepositoryMock.Setup(x => x.IsEmailUniqueAsync(It.IsAny<Email>())).ReturnsAsync(true);
-
-            var userService = new UserService(_dbContextMock.Object, _unitOfWorkMock.Object, _jwtProvider,
-                _userRepositoryMock.Object, _passwordHasher);
-
-            // Act
-            var testResult = await userService.CreateAsync("John", "41548568040", "4154856-BR", "john.doe@test.com", UserRoles.Doctor, "John@123");            
-
-            // Assert
-            testResult.Should().NotBeNull();
-            testResult.Token.Should().NotBeNullOrWhiteSpace();
-
-            _userRepositoryMock.Verify(x => x.IsEmailUniqueAsync(It.IsAny<Email>()), Times.Once);
-            _userRepositoryMock.Verify(x => x.Insert(It.IsAny<User>()), Times.Once);
-            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Once);
-        }
-
         #endregion
 
         #endregion

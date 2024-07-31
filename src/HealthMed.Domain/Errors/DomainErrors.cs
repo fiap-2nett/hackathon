@@ -80,7 +80,19 @@ namespace HealthMed.Domain.Errors
             
             public static Error NameIsRequired = new Error(
                 "User.NameIsRequired",
-                "The user name is required.");            
+                "The user name is required.");
+
+            public static Error CRMCannotBeNull = new Error(
+                "User.CRMCannotBeNull",
+                "The doctor's CRM is required.");
+
+            public static Error InvalidCPF = new Error(
+                "User.InvalidCPF",
+                "The informed CPF is invalid.");
+
+            public static Error InvalidCRM = new Error(
+                "User.InvalidCRM",
+                "The informed CRM is invalid.");
         }
     }
 }
