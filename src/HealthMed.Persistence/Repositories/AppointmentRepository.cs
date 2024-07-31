@@ -5,6 +5,8 @@ using HealthMed.Domain.Entities;
 using HealthMed.Domain.Repositories;
 using HealthMed.Persistence.Core.Primitives;
 using Enums = HealthMed.Domain.Enumerations;
+using System.Collections.Generic;
+using System.Runtime;
 
 namespace HealthMed.Persistence.Repositories
 {
@@ -19,6 +21,12 @@ namespace HealthMed.Persistence.Repositories
         #endregion
 
         #region IAppointmentRepository Members
+
+        public async Task<Appointment> GetByAppointment(Appointment appointment)
+            => await FirstOrDefaultAsync(x =>
+                x.IdDoctor == appointment.IdDoctor &&
+                x.AppointmentDate == appointment.AppointmentDate &&
+                x.IdAppointmentStatus != (byte)Enums.AppointmentStatus.Canceled);
 
         public async Task<bool> IsOverlappingAsync(int idUserPatient, DateTime appointmentDate)
             => await AnyAsync(x =>

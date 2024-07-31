@@ -33,6 +33,9 @@ namespace HealthMed.Domain.Entities
             Ensure.GreaterThan(startDate, DateTime.MinValue, $"The StartDate must be greater than {DateTime.MinValue:dd/MM/yyyy}.", nameof(startDate));
             Ensure.GreaterThan(endDate, startDate, $"The EndDate must be greater than {startDate:dd/MM/yyyy}.", nameof(endDate));
 
+            if (startDate.Date != endDate.Date)
+                throw new DomainException(DomainErrors.Schedule.DifferentDate);
+
             IdDoctor = idDoctor;
             StartDate = startDate;
             EndDate = endDate;
@@ -46,6 +49,9 @@ namespace HealthMed.Domain.Entities
         {
             if (userPerformedAction.Id != IdDoctor)
                 throw new InvalidPermissionException(DomainErrors.Schedule.InvalidPermissions);
+
+            if (startDate.Date != endDate.Date)
+                throw new DomainException(DomainErrors.Schedule.DifferentDate);
 
             Ensure.GreaterThan(startDate, DateTime.MinValue, $"The StartDate must be greater than {DateTime.MinValue:dd/MM/yyyy}.", nameof(startDate));
             Ensure.GreaterThan(endDate, startDate, $"The EndDate must be greater than {startDate:dd/MM/yyyy}.", nameof(endDate));

@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using HealthMed.Domain.Core.Abstractions;
 using HealthMed.Domain.Core.Primitives;
 using HealthMed.Domain.Core.Utility;
-using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
 using Enums = HealthMed.Domain.Enumerations;
@@ -46,6 +46,12 @@ namespace HealthMed.Domain.Entities
 
         #region Public Methods
 
+        public void CancelAppointment()
+        {
+            IdAppointmentStatus = (byte)Enums.AppointmentStatus.Canceled;
+            CanceledAt = DateTime.UtcNow;
+        }
+
         public void Reserve(User userPatient)
         {
             if (userPatient is null)
@@ -57,6 +63,40 @@ namespace HealthMed.Domain.Entities
             IdPatient = userPatient.Id;
             HasBeenNotified = true;
             IdAppointmentStatus = (byte)Enums.AppointmentStatus.Busy;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        public static IList<Appointment> BuildAppointmentListFromSchedules(int idDoctor, DateTime startDate, DateTime endDate)
+        {
+            List<Appointment> appointmentsList = new List<Appointment>();
+            var currentStart = startDate;
+            while (currentStart < endDate)
+            {
+                appointmentsList.Add(new Appointment(idDoctor, currentStart));
+                currentStart = currentStart.AddHours(1);
+            }
+
+            return appointmentsList;
+        }
+
+        public static IReadOnlyCollection<Appointment> BuildAppointmentListFromSchedules(int idDoctor, IReadOnlyCollection<Schedule> schedules)
+        {
+            List<Appointment> appointmentsList = new List<Appointment>();
+
+            foreach (var schedule in schedules)
+            {
+                var currentStart = schedule.StartDate;
+                while (currentStart < schedule.EndDate)
+                {
+                    appointmentsList.Add(new Appointment(idDoctor, currentStart));
+                    currentStart = currentStart.AddHours(1);
+                }
+            }
+
+            return appointmentsList;
         }
 
         #endregion
