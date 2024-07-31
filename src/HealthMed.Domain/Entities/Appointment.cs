@@ -2,6 +2,9 @@ using System;
 using HealthMed.Domain.Core.Abstractions;
 using HealthMed.Domain.Core.Primitives;
 using HealthMed.Domain.Core.Utility;
+using HealthMed.Domain.Enumerations;
+using HealthMed.Domain.Errors;
+using HealthMed.Domain.Exceptions;
 using Enums = HealthMed.Domain.Enumerations;
 
 namespace HealthMed.Domain.Entities
@@ -37,6 +40,23 @@ namespace HealthMed.Domain.Entities
             IdDoctor = idDoctor;
             AppointmentDate = appointmentDate;
             IdAppointmentStatus = (byte)Enums.AppointmentStatus.Available;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void Reserve(User userPatient)
+        {
+            if (userPatient is null)
+                throw new DomainException(DomainErrors.User.NotFound);
+
+            if (IdAppointmentStatus != (byte)Enums.AppointmentStatus.Available)
+                throw new InvalidPermissionException(DomainErrors.Appointment.CannotBeReserved);
+
+            IdPatient = userPatient.Id;
+            HasBeenNotified = true;
+            IdAppointmentStatus = (byte)Enums.AppointmentStatus.Busy;
         }
 
         #endregion

@@ -105,5 +105,20 @@ namespace HealthMed.Domain.Errors
                 "schedule.NotFound",
                 "The schedule with the specified identifier was not found.");
         }
+
+        public static class Appointment
+        {
+            public static Error NotFound => new Error(
+                "Appointment.NotFound",
+                "The appointment with the specified identifier was not found.");
+
+            public static Error CannotBeReserved => new Error(
+                "Appointment.CannotBeReserved",
+                "The appointment is already booked for another patient.");
+
+            public static Error Overlap = new Error(
+                "Appointment.Overlap",
+                "There was an overlap in appointments, please check availability.");
+        }
     }
 }
