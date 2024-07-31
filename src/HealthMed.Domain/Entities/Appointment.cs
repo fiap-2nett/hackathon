@@ -73,7 +73,7 @@ namespace HealthMed.Domain.Entities
         {
             List<Appointment> appointmentsList = new List<Appointment>();
             var currentStart = startDate;
-            while (currentStart <= endDate)
+            while (currentStart < endDate)
             {
                 appointmentsList.Add(new Appointment(idDoctor, currentStart));
                 currentStart = currentStart.AddHours(1);
@@ -89,7 +89,7 @@ namespace HealthMed.Domain.Entities
             foreach (var schedule in schedules)
             {
                 var currentStart = schedule.StartDate;
-                while (currentStart <= schedule.EndDate)
+                while (currentStart < schedule.EndDate)
                 {
                     appointmentsList.Add(new Appointment(idDoctor, currentStart));
                     currentStart = currentStart.AddHours(1);
