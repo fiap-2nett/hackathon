@@ -2,11 +2,17 @@
 
 # Hackthon - Health&Med API
 
-A HelpDesk API é uma plataforma de gerenciamento de tickets que visa aprimorar a gestão operacional,
-oferecendo maior controle e centralização das informações relacionadas aos tickets. Este sistema permite que
-os usuários criem, gerenciem e monitorem o status de tickets, enquanto os administradores têm a capacidade de
-coordenar e controlar todo o processo. Os analistas desempenham um papel crucial na resolução dos tickets e na
-atualização do seu andamento.
+A Health&Med API é uma plataforma que conecta médicos e pacientes possibilitando o agendamento de consultas
+de forma rápida e assertiva. A plataforma ainda possibilita aos médicos a customização de horários disponíveis
+para consultas.
+
+## Documentação de Requisitos
+
+A documentação de Requisitos Funcionais (RF), Não Funcionais (RNF) e
+entregáveis esperados neste Hackathon foi disponibilizada pelos
+Stakeholders da Health&Med e pode ser encontrada em.:
+
+[Documentação de Requisitos](https://github.com/fiap-2nett/hackathon/blob/main/doc/Hackathon%20-%20Turma%20.NET.pdf)
 
 ## Colaboradores
 
@@ -40,7 +46,7 @@ atualização do seu andamento.
 
 ## Definições técnicas
 
-A solução do HelpDesk API é composta pelos seguintes projetos:
+A solução da Health&Med API é composta pelos seguintes projetos:
 
 | Projeto                           | Descrição                                                                               |
 |-----------------------------------|-----------------------------------------------------------------------------------------|
@@ -54,7 +60,7 @@ A solução do HelpDesk API é composta pelos seguintes projetos:
 
 ## Modelagem de dados
 
-A HelpDesk API utiliza o paradigma de CodeFirst através dos recursos disponibilizados pelo Entity Framework, no entanto para melhor
+A Health&Med API utiliza o paradigma de CodeFirst através dos recursos disponibilizados pelo Entity Framework, no entanto para melhor
 entendimento da modelagem de dados apresentamos a seguir o MER e suas respectivas definições:
 
 ![Modelagem de Dados](doc/assets/img/der.png)
@@ -63,10 +69,66 @@ Com base na imagem acima iremos detalhar as tabelas e os dados contidos em cada 
 
 | Schema | Tabela            | Descrição                                                                                      |
 |--------|-------------------|------------------------------------------------------------------------------------------------|
-| dbo    | users             | Tabela que contém os dados referentes aos usuários (médicos e pacientes da plataforma.         |
+| dbo    | users             | Tabela que contém os dados referentes aos usuários (médicos e pacientes da plataforma).         |
 | dbo    | roles             | Tabela que contém os dados referentes aos tipos de perfis de usuário da plataforma.            |
 | dbo    | schedules         | Tabela que contém os dados referentes aos horários de atendimento dos médicos.                 |
 | dbo    | appointments      | Tabela que contém os dados referentes aos horários de agendamento de consultas.                |
 | dbo    | appointmentstatus | Tabela que contém os dados referentes aos status de agendamentos.                              |
 
 
+## Como executar
+
+Toda a infraestrutura necessária para execução da Health&Med API
+deve ser provisionada automaticamente configurando o **"docker-compose"**
+como projeto de inicialização no Visual Studio.:
+
+![Startup Project](doc/assets/img/startup.png)
+
+Também é possível executar a solução diretamente sem a necessidade do Visual Studio,
+para tal, apenas necessitamos do Docker previamente instalado.
+Para executar a solução diretamente através do Docker, abra um terminal no diretório
+raíz do projeto e execute o seguinte comando:
+
+```sh
+$ docker compose up -d
+```
+
+Após rodar o projeto a iteração pode ser feita via Swagger pelo link abaixo.:
+
+https://localhost:5001/swagger/index.html
+
+![Swagger](doc/assets/img/swagger.png)
+
+
+## CI/CD Pipeline
+
+A Health&Med API disponibiliza uma CI/CD Pipeline com o objetivo de melhorar e automatizar
+processos envolvidos no desenvolvimento da plataforma com foco na integração contínua do código escrito
+pelos membros da equipe (CI) e a disponibilização e implantação do software em ambiente de produção (CD),
+incluso neste processo a execução de Testes Unitários e Arquiteturais garantindo sempre
+a integridade da solução.:
+
+![CI/CD Pipeline](doc/assets/img/pipeline.png)
+
+Além disso, a CI/CD Pipeline é responsável ainda por
+realizar a publicação da imagem do Container da solução no Docker Hub.:
+
+[Link para Imagem no Docker Hub](https://hub.docker.com/repository/docker/techchallengephase2/healthmed-api/general)
+
+Se preferir, os testes também podem ser executados localmente via dotnet CLI. Para isso rode os comandos abaixo.:
+```sh
+$ dotnet test tests/HealthMed.Application.UnitTests/HealthMed.Application.UnitTests.csproj --no-build --verbosity normal
+$ dotnet test tests/HealthMed.ArchitectureTests/HealthMed.ArchitectureTests.csproj --no-build --verbosity normal
+```
+
+Caso queira executar todos os projetos de teste, execute o comando:
+
+```sh
+$ dotnet test HealthMed.sln
+```
+
+Caso queria uma versão de resultado com mais detalhes, execute o seguinte comando:
+
+```sh
+$ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste.csproj>
+```
