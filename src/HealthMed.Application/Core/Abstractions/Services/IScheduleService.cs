@@ -10,7 +10,7 @@ namespace HealthMed.Application.Core.Abstractions.Services
     {
         Task<PagedList<ScheduleResponse>> GetAsync(int page, int pageSize);
         Task<DetailedScheduleResponse> GetByIdAsync(int idSchedule);
-        Task<List<ScheduleResponse>> CreateAsync(int userId, IList<dynamic> schedules);
-        Task<ScheduleResponse> Update(int idUserPerformedAction, int scheduleId, DateTime startDate, DateTime endDate);
+        Task<List<ScheduleResponse>> CreateAsync(int idUserPerformedAction, List<(DateTime StartDate, DateTime EndDate)> periods);
+        Task<ScheduleResponse> Update(int idUserPerformedAction, int idSchedule, DateTime startDate, DateTime endDate);
     }
 }

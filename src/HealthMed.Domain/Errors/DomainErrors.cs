@@ -86,28 +86,28 @@ namespace HealthMed.Domain.Errors
         public static class Schedule
         {
             public static Error DataSentIsInvalid => new Error(
-                "schedule.DataSentIsInvalid",
+                "Schedule.DataSentIsInvalid",
                 "The schedule data sent in the request is invalid.");
 
             public static Error InvalidPermissions => new Error(
-                "schedule.InvalidPermissions",
+                "Schedule.InvalidPermissions",
                 "The current user does not have the permissions to perform that operation.");
 
             public static Error ScheduleInvalid => new Error(
-                 "schedule.ScheduleInvalid",
-                 "Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+                "Schedule.ScheduleInvalid",
+                "Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
 
             public static Error Conflicting => new Error(
-                 "schedule.Conflicting",
-                 "There is a conflicting appointment in the specified period.");
+                "Schedule.Conflicting",
+                "There is a conflicting appointment in the specified period.");
 
             public static Error NotFound => new Error(
-                "schedule.NotFound",
+                "Schedule.NotFound",
                 "The schedule with the specified identifier was not found.");
 
             public static Error DifferentDate => new Error(
-                    "schedule.DifferentDate",
-                    "The start date cannot be different from the end date.");
+                "Schedule.DifferentDate",
+                "The start date cannot be different from the end date.");
         }
 
         public static class Appointment
@@ -115,6 +115,10 @@ namespace HealthMed.Domain.Errors
             public static Error NotFound => new Error(
                 "Appointment.NotFound",
                 "The appointment with the specified identifier was not found.");
+
+            public static Error RetroactiveReserve => new Error(
+                "Appointment.RetroactiveReserve",
+                "Retroactive bookings are not permitted.");
 
             public static Error CannotBeReserved => new Error(
                 "Appointment.CannotBeReserved",

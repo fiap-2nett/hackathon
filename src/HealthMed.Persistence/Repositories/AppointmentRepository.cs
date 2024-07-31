@@ -1,12 +1,10 @@
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
 using HealthMed.Application.Core.Abstractions.Data;
 using HealthMed.Domain.Entities;
 using HealthMed.Domain.Repositories;
 using HealthMed.Persistence.Core.Primitives;
 using Enums = HealthMed.Domain.Enumerations;
-using System.Collections.Generic;
-using System.Runtime;
 
 namespace HealthMed.Persistence.Repositories
 {
@@ -22,10 +20,10 @@ namespace HealthMed.Persistence.Repositories
 
         #region IAppointmentRepository Members
 
-        public async Task<Appointment> GetByAppointment(Appointment appointment)
+        public async Task<Appointment> GetByDoctorAndDateAsync(int idUserDoctor, DateTime appointmentDate)
             => await FirstOrDefaultAsync(x =>
-                x.IdDoctor == appointment.IdDoctor &&
-                x.AppointmentDate == appointment.AppointmentDate &&
+                x.IdDoctor == idUserDoctor &&
+                x.AppointmentDate == appointmentDate &&
                 x.IdAppointmentStatus != (byte)Enums.AppointmentStatus.Canceled);
 
         public async Task<bool> IsOverlappingAsync(int idUserPatient, DateTime appointmentDate)

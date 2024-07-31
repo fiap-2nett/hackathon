@@ -4,13 +4,21 @@ using System.Linq;
 using HealthMed.Domain.Core.Abstractions;
 using HealthMed.Domain.Core.Primitives;
 using HealthMed.Domain.Core.Utility;
+using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
+using HealthMed.Domain.Extensions;
 
 namespace HealthMed.Domain.Entities
 {
     public class Schedule : AggregateRoot<int>, IAuditableEntity
     {
+        #region Constants
+
+        private const int AppointmentDurationDefaultInMinutes = 60;
+
+        #endregion
+
         #region Properties
 
         public int IdDoctor { get; private set; }
@@ -60,36 +68,65 @@ namespace HealthMed.Domain.Entities
             EndDate = endDate;
         }
 
-        public static IReadOnlyCollection<Schedule> CreateSchedules(int idDoctor, IList<dynamic> schedules)
+        #endregion
+
+        #region Static Methods
+
+        public static bool IsValidSchedule(DateTime startDate, DateTime endDate, int? appointmentDurationInMinutes = null)
         {
-            if (schedules == null || !schedules.Any())
-                throw new ArgumentException("The schedules list cannot be null or empty.", nameof(schedules));
+            appointmentDurationInMinutes ??= AppointmentDurationDefaultInMinutes;
 
-            var scheduleList = new List<Schedule>();
+            if (startDate.WithoutSeconds() < DateTime.Now.WithoutSeconds())
+                return false;
 
-            foreach (var schedule in schedules)
+            if (endDate.WithoutSeconds() <= startDate.WithoutSeconds())
+                return false;
+
+            if ((endDate.WithoutSeconds() - startDate.WithoutSeconds()).TotalMinutes % appointmentDurationInMinutes != 0)
+                return false;
+
+            return true;
+        }
+
+        public static bool IsValidSchedule(List<(DateTime StartDate, DateTime EndDate)> intervals, int? appointmentDurationInMinutes = null)
+        {
+            appointmentDurationInMinutes ??= AppointmentDurationDefaultInMinutes;
+
+            var processedSchedules = intervals.Select(s => new { StartDate = s.StartDate.WithoutSeconds(), EndDate = s.EndDate.WithoutSeconds() })
+                .OrderBy(s => s.StartDate)
+                .ToList();
+
+            foreach (var schedule in processedSchedules)
             {
-                DateTime startDate = new DateTime(
-                    schedule.StartDate.Year,
-                    schedule.StartDate.Month,
-                    schedule.StartDate.Day,
-                    schedule.StartDate.Hour,
-                    schedule.StartDate.Minute,
-                    0);
+                if (schedule.StartDate < DateTime.Now.WithoutSeconds())
+                    return false;
 
-                DateTime endDate = new DateTime(
-                    schedule.EndDate.Year,
-                    schedule.EndDate.Month,
-                    schedule.EndDate.Day,
-                    schedule.EndDate.Hour,
-                    schedule.EndDate.Minute,
-                    0);
+                if (schedule.EndDate <= schedule.StartDate)
+                    return false;
 
-                var newSchedule = new Schedule(idDoctor, startDate, endDate);
-                scheduleList.Add(newSchedule);
+                if ((schedule.EndDate - schedule.StartDate).TotalMinutes % appointmentDurationInMinutes != 0)
+                    return false;
             }
 
-            return scheduleList;
+            for (int i = 0; i < processedSchedules.Count - 1; i++)
+            {
+                if (processedSchedules[i].EndDate > processedSchedules[i + 1].StartDate)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static IReadOnlyCollection<Schedule> CreateSchedules(User userDoctor, List<(DateTime StartDate, DateTime EndDate)> intervals)
+        {
+            if (userDoctor.IdRole != (int)UserRoles.Doctor)
+                throw new InvalidPermissionException(DomainErrors.Schedule.InvalidPermissions);
+
+            if (intervals.IsNullOrEmpty())
+                throw new ArgumentException("The intervals list cannot be null or empty.", nameof(intervals));
+
+            return intervals.Select(schedule => new Schedule(userDoctor.Id, schedule.StartDate.WithoutSeconds(), schedule.EndDate.WithoutSeconds()))
+                .ToList();
         }
 
         #endregion

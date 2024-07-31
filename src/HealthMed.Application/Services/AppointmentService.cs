@@ -99,6 +99,7 @@ namespace HealthMed.Application.Services
                     throw new DomainException(DomainErrors.Appointment.Overlap);
 
                 appointment.Reserve(userPatient);
+
                 await _unitOfWork.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
