@@ -8,12 +8,14 @@ namespace HealthMed.Domain.Repositories
     public interface IAppointmentRepository
     {
         #region IAppointmentRepository Members
+
+        Task<Appointment> GetByIdAsync(int idAppointment);        
+        Task<Appointment> GetByDoctorAndDateAsync(int idUserDoctor, DateTime appointmentDate);
+        Task<bool> IsOverlappingAsync(int idUserPatient, DateTime appointmentDate);
+
         void Update(Appointment appointment);
-        Task<Appointment> GetByAppointment(Appointment appointments);
         void Insert(Appointment appointment);
         void InsertRange(IReadOnlyCollection<Appointment> entities);
-        Task<Appointment> GetByIdAsync(int idAppointment);
-        Task<bool> IsOverlappingAsync(int idUserPatient, DateTime appointmentDate);
 
         #endregion
     }

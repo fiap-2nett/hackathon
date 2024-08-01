@@ -1,19 +1,19 @@
 using System;
-using System.Threading.Tasks;
-using HealthMed.Application.Core.Abstractions.Data;
-using HealthMed.Application.Core.Abstractions.Services;
-using HealthMed.Domain.Repositories;
-using HealthMed.Domain.Entities;
-using HealthMed.Application.Contracts.Schedule;
-using HealthMed.Domain.Exceptions;
-using HealthMed.Domain.Errors;
-using HealthMed.Domain.Enumerations;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using HealthMed.Application.Contracts.User;
+using System.Threading.Tasks;
 using HealthMed.Application.Contracts.Common;
-using Microsoft.Identity.Client;
+using HealthMed.Application.Contracts.Schedule;
+using HealthMed.Application.Contracts.User;
+using HealthMed.Application.Core.Abstractions.Data;
+using HealthMed.Application.Core.Abstractions.Services;
+using HealthMed.Domain.Entities;
+using HealthMed.Domain.Enumerations;
+using HealthMed.Domain.Errors;
+using HealthMed.Domain.Exceptions;
+using HealthMed.Domain.Extensions;
+using HealthMed.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthMed.Application.Services
 {
@@ -21,11 +21,10 @@ namespace HealthMed.Application.Services
     {
         #region Read-Only Fields
 
-        private const int AppointmentDurationInMinutes = 60;
         private readonly IDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IScheduleRepository _scheduleRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IScheduleRepository _scheduleRepository;
         private readonly IAppointmentRepository _appointmentRepository;
 
         #endregion
@@ -34,14 +33,14 @@ namespace HealthMed.Application.Services
 
         public SchedulesService(IDbContext dbContext,
                                 IUnitOfWork unitOfWork,
-                                IScheduleRepository scheduleService,
                                 IUserRepository userRepository,
+                                IScheduleRepository scheduleService,
                                 IAppointmentRepository appointmentRepository)
         {
             _dbContext = dbContext ?? throw new ArgumentException(nameof(dbContext));
             _unitOfWork = unitOfWork ?? throw new ArgumentException(nameof(unitOfWork));
-            _scheduleRepository = scheduleService ?? throw new ArgumentException(nameof(scheduleService));
             _userRepository = userRepository ?? throw new ArgumentException(nameof(userRepository));
+            _scheduleRepository = scheduleService ?? throw new ArgumentException(nameof(scheduleService));
             _appointmentRepository = appointmentRepository ?? throw new ArgumentException(nameof(appointmentRepository));
         }
 
@@ -69,6 +68,7 @@ namespace HealthMed.Application.Services
 
             return new PagedList<ScheduleResponse>(scheduleReponsePage, page, pageSize, totalCount);
         }
+
         public async Task<DetailedScheduleResponse> GetByIdAsync(int idSchedule)
         {
             IQueryable<DetailedScheduleResponse> scheduleQuery = (
@@ -88,61 +88,54 @@ namespace HealthMed.Application.Services
 
             return await scheduleQuery.FirstOrDefaultAsync();
         }
-        public async Task<List<ScheduleResponse>> CreateAsync(int userId, IList<dynamic> schedules)
+
+        public async Task<List<ScheduleResponse>> CreateAsync(int idUserPerformedAction, List<(DateTime StartDate, DateTime EndDate)> intervals)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var userDoctor = await _userRepository.GetByIdAsync(idUserPerformedAction);
+            if (userDoctor is null)
+                throw new NotFoundException(DomainErrors.User.NotFound);            
 
-            if (user is null)
-                throw new NotFoundException(DomainErrors.User.NotFound);
-
-            if (user.IdRole != (int)UserRoles.Doctor)
-                throw new InvalidPermissionException(DomainErrors.Schedule.InvalidPermissions);
-
-            if (!IsValidSchedule(schedules))
+            if (!Schedule.IsValidSchedule(intervals))
                 throw new DomainException(DomainErrors.Schedule.ScheduleInvalid);
 
-            await VerifyPeriod(userId, schedules);
+            await VerifyPeriod(userDoctor.Id, intervals);
+            var scheduleList = Schedule.CreateSchedules(userDoctor, intervals);
 
-            var entities = Schedule.CreateSchedules(userId, schedules);
+            _scheduleRepository.InsertRange(scheduleList);
+            _appointmentRepository.InsertRange(Appointment.BuildAppointmentListFromSchedules(userDoctor.Id, scheduleList));
 
-            _scheduleRepository.InsertRange(entities);
-            _appointmentRepository.InsertRange(Appointment.BuildAppointmentListFromSchedules(userId, entities.ToList()));
             await _unitOfWork.SaveChangesAsync();
 
-            return entities.Select(s => new ScheduleResponse
-            {
-                Id = s.Id,
-                StartDate = s.StartDate,
-                EndDate = s.EndDate
-            }).ToList();
+            return scheduleList
+                .Select(s => new ScheduleResponse { Id = s.Id, StartDate = s.StartDate, EndDate = s.EndDate })
+                .ToList();
         }
-        public async Task<ScheduleResponse> Update(int idUserPerformedAction, int scheduleId, DateTime startDate, DateTime endDate)
+
+        public async Task<ScheduleResponse> Update(int idUserPerformedAction, int idSchedule, DateTime startDate, DateTime endDate)
         {
-            startDate = new DateTime(startDate.Year,startDate.Month,startDate.Day,startDate.Hour,startDate.Minute,0);
-            endDate = new DateTime(endDate.Year,endDate.Month,endDate.Day,endDate.Hour,endDate.Minute,0);
-
-            var userPerformedAction = await _userRepository.GetByIdAsync(idUserPerformedAction);
-
-            if (userPerformedAction is null)
+            var userDoctor = await _userRepository.GetByIdAsync(idUserPerformedAction);            
+            if (userDoctor is null)
                 throw new NotFoundException(DomainErrors.User.NotFound);
 
-            var schedule = await _scheduleRepository.GetByIdAsync(scheduleId);
+            if (userDoctor.IdRole != (int)UserRoles.Doctor)
+                throw new InvalidPermissionException(DomainErrors.Schedule.InvalidPermissions);
 
+            var schedule = await _scheduleRepository.GetByIdAsync(idSchedule);
             if (schedule is null)
                 throw new NotFoundException(DomainErrors.Schedule.NotFound);
 
-            if (!IsValidSchedule(startDate, endDate))
+            if (!Schedule.IsValidSchedule(startDate.WithoutSeconds(), endDate.WithoutSeconds()))
                 throw new DomainException(DomainErrors.Schedule.ScheduleInvalid);
 
-            if (await _scheduleRepository.HasScheduleConflictAsync(userPerformedAction.Id, scheduleId, startDate, endDate))
-                throw new DomainException(DomainErrors.Schedule.Conflicting);
+            if (await _scheduleRepository.HasScheduleConflictAsync(userDoctor.Id, idSchedule, startDate.WithoutSeconds(), endDate))
+                throw new DomainException(DomainErrors.Schedule.Conflicting);            
 
-            var Newappointments = Appointment.BuildAppointmentListFromSchedules(userPerformedAction.Id, startDate, endDate);
-            var oldAppointments = Appointment.BuildAppointmentListFromSchedules(userPerformedAction.Id, schedule.StartDate, schedule.EndDate);
-
-            await ProcessAppointmentsAsync(Newappointments, oldAppointments);
-            schedule.Update(startDate, endDate, userPerformedAction);
-            _scheduleRepository.Update(schedule);
+            var newAppointments = Appointment.BuildAppointmentListFromSchedules(userDoctor.Id, startDate.WithoutSeconds(), endDate.WithoutSeconds());
+            var oldAppointments = Appointment.BuildAppointmentListFromSchedules(userDoctor.Id, schedule.StartDate.WithoutSeconds(), schedule.EndDate.WithoutSeconds());
+                       
+            schedule.Update(startDate.WithoutSeconds(), endDate.WithoutSeconds(), userDoctor);
+            await UpdateAppointmentsAsync(newAppointments, oldAppointments);
+            
             await _unitOfWork.SaveChangesAsync();
 
             return new ScheduleResponse
@@ -157,11 +150,11 @@ namespace HealthMed.Application.Services
 
         #region Private Methods
 
-        private async Task ProcessAppointmentsAsync(IList<Appointment> newAppointments, IList<Appointment> oldAppointments)
+        private async Task UpdateAppointmentsAsync(List<Appointment> newAppointments, List<Appointment> oldAppointments)
         {
             foreach (var newAppointment in newAppointments)
             {
-                var existingAppointment = await _appointmentRepository.GetByAppointment(newAppointment);
+                var existingAppointment = await _appointmentRepository.GetByDoctorAndDateAsync(newAppointment.IdDoctor, newAppointment.AppointmentDate);
 
                 if (existingAppointment is null)
                 {
@@ -171,14 +164,10 @@ namespace HealthMed.Application.Services
                 {
                     if (existingAppointment.IdPatient.HasValue)
                     {
-                        existingAppointment.CancelAppointment();
-                        _appointmentRepository.Update(existingAppointment);
-                        _appointmentRepository.Insert(newAppointment);
+                        existingAppointment.Cancel();
                     }
-                    else
-                    {
-                        _appointmentRepository.Update(existingAppointment);
-                    }
+
+                    _appointmentRepository.Insert(newAppointment);
                 }
 
                 oldAppointments.Remove(newAppointment);
@@ -186,88 +175,21 @@ namespace HealthMed.Application.Services
 
             foreach (var oldAppointment in oldAppointments)
             {
-                var existingAppointment = await _appointmentRepository.GetByAppointment(oldAppointment);
-                if (existingAppointment != null)
-                {
-                    existingAppointment.CancelAppointment();
-                    _appointmentRepository.Update(existingAppointment);
-                }
+                var existingAppointment = await _appointmentRepository.GetByDoctorAndDateAsync(oldAppointment.IdDoctor, oldAppointment.AppointmentDate);
+                if (existingAppointment is null)
+                    continue;
+                
+                existingAppointment.Cancel();                
             }
         }
 
-        private async Task VerifyPeriod(int userId, IList<dynamic> schedules)
+        private async Task VerifyPeriod(int userId, List<(DateTime StartDate, DateTime EndDate)> intervals)
         {
-            foreach (var schedule in schedules)
-            {
-                DateTime startDate = new DateTime(schedule.StartDate.Year, schedule.StartDate.Month, schedule.StartDate.Day, schedule.StartDate.Hour, schedule.StartDate.Minute, 0);
-                DateTime endDate = new DateTime(schedule.EndDate.Year, schedule.EndDate.Month, schedule.EndDate.Day, schedule.EndDate.Hour, schedule.EndDate.Minute, 0);
-
-                if (await _scheduleRepository.HasScheduleConflictAsync(userId, startDate, endDate))
+            foreach (var interval in intervals)
+            {                
+                if (await _scheduleRepository.HasScheduleConflictAsync(userId, interval.StartDate.WithoutSeconds(), interval.EndDate.WithoutSeconds()))
                     throw new DomainException(DomainErrors.Schedule.Conflicting);
-
             }
-        }
-
-        private bool IsValidSchedule(DateTime startDate, DateTime endDate)
-        {
-            DateTime currentDateTime = DateTime.Now;
-
-            startDate = new DateTime(
-                startDate.Year,
-                startDate.Month,
-                startDate.Day,
-                startDate.Hour,
-                startDate.Minute,
-                0);
-
-            endDate = new DateTime(
-                endDate.Year,
-                endDate.Month,
-                endDate.Day,
-                endDate.Hour,
-                endDate.Minute,
-                0);
-
-            if (startDate < currentDateTime)
-                return false;
-
-            if (endDate <= startDate)
-                return false;
-
-            if ((endDate - startDate).TotalMinutes % AppointmentDurationInMinutes != 0)
-                return false;
-
-            return true;
-        }
-
-        private bool IsValidSchedule(IList<dynamic> schedules)
-        {
-            DateTime currentDateTime = DateTime.Now;
-            var processedSchedules = schedules.Select(s => new
-            {
-                StartDate = new DateTime(s.StartDate.Year, s.StartDate.Month, s.StartDate.Day, s.StartDate.Hour, s.StartDate.Minute, 0),
-                EndDate = new DateTime(s.EndDate.Year, s.EndDate.Month, s.EndDate.Day, s.EndDate.Hour, s.EndDate.Minute, 0)
-            }).OrderBy(s => s.StartDate).ToList();
-
-            foreach (var schedule in processedSchedules)
-            {
-                if (schedule.StartDate < currentDateTime)
-                    return false;
-
-                if (schedule.EndDate <= schedule.StartDate)
-                    return false;
-
-                if ((schedule.EndDate - schedule.StartDate).TotalMinutes % AppointmentDurationInMinutes != 0)
-                    return false;
-            }
-
-            for (int i = 0; i < processedSchedules.Count - 1; i++)
-            {
-                if (processedSchedules[i].EndDate > processedSchedules[i + 1].StartDate)
-                    return false;
-            }
-
-            return true;
         }
 
         #endregion
