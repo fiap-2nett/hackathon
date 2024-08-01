@@ -46,7 +46,7 @@ namespace HealthMed.Domain.Entities
 
         #region Public Methods
 
-        public void CancelAppointment()
+        public void Cancel()
         {
             IdAppointmentStatus = (byte)Enums.AppointmentStatus.Canceled;
             CanceledAt = DateTime.UtcNow;
@@ -56,6 +56,9 @@ namespace HealthMed.Domain.Entities
         {
             if (userPatient is null)
                 throw new DomainException(DomainErrors.User.NotFound);
+
+            if (AppointmentDate < DateTime.Now)
+                throw new InvalidPermissionException(DomainErrors.Appointment.RetroactiveReserve);
 
             if (IdAppointmentStatus != (byte)Enums.AppointmentStatus.Available)
                 throw new InvalidPermissionException(DomainErrors.Appointment.CannotBeReserved);
@@ -69,10 +72,11 @@ namespace HealthMed.Domain.Entities
 
         #region Private Methods
 
-        public static IList<Appointment> BuildAppointmentListFromSchedules(int idDoctor, DateTime startDate, DateTime endDate)
+        public static List<Appointment> BuildAppointmentListFromSchedules(int idDoctor, DateTime startDate, DateTime endDate)
         {
-            List<Appointment> appointmentsList = new List<Appointment>();
             var currentStart = startDate;
+            var appointmentsList = new List<Appointment>();
+
             while (currentStart < endDate)
             {
                 appointmentsList.Add(new Appointment(idDoctor, currentStart));
@@ -84,11 +88,12 @@ namespace HealthMed.Domain.Entities
 
         public static IReadOnlyCollection<Appointment> BuildAppointmentListFromSchedules(int idDoctor, IReadOnlyCollection<Schedule> schedules)
         {
-            List<Appointment> appointmentsList = new List<Appointment>();
+            var appointmentsList = new List<Appointment>();
 
             foreach (var schedule in schedules)
             {
                 var currentStart = schedule.StartDate;
+
                 while (currentStart < schedule.EndDate)
                 {
                     appointmentsList.Add(new Appointment(idDoctor, currentStart));

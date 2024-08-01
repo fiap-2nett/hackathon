@@ -1,16 +1,15 @@
-using HealthMed.Api.Contracts;
-using HealthMed.Application.Core.Abstractions.Services;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 using System;
-using Microsoft.AspNetCore.Mvc;
-using HealthMed.Application.Contracts.Schedule;
 using System.Collections.Generic;
-using HealthMed.Application.Core.Abstractions.Authentication;
-using HealthMed.Domain.Exceptions;
-using HealthMed.Domain.Errors;
-using System.Linq;
+using System.Threading.Tasks;
+using HealthMed.Api.Contracts;
 using HealthMed.Application.Contracts.Common;
+using HealthMed.Application.Contracts.Schedule;
+using HealthMed.Application.Core.Abstractions.Authentication;
+using HealthMed.Application.Core.Abstractions.Services;
+using HealthMed.Domain.Errors;
+using HealthMed.Domain.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HealthMed.Api.Controllers
 {
@@ -55,13 +54,12 @@ namespace HealthMed.Api.Controllers
         [HttpPost(ApiRoutes.Schedule.Create)]
         [ProducesResponseType(typeof(List<ScheduleRequest>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Create([FromBody] IList<ScheduleRequest> request)
+        public async Task<IActionResult> Create([FromBody] List<ScheduleRequest> request)
         {
            if(request is null)
                 throw new DomainException(DomainErrors.Schedule.DataSentIsInvalid);
 
-            var dynamicList = request.Cast<dynamic>().ToList();
-            var createdSchedules = await _scheduleService.CreateAsync(_userSessionProvider.IdUser, dynamicList);
+            var createdSchedules = await _scheduleService.CreateAsync(_userSessionProvider.IdUser, request.ConvertAll(x => (x.StartDate, x.EndDate)));
 
             return Created(Url.Action(nameof(GetAll), "Schedule"), createdSchedules);
         }
