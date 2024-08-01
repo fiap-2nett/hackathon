@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using HealthMed.Application.Contracts.Appointment;
 using HealthMed.Application.Contracts.Common;
 using HealthMed.Application.Core.Abstractions.Data;
+using HealthMed.Application.Core.Abstractions.Messaging;
 using HealthMed.Application.Core.Abstractions.Services;
 using HealthMed.Domain.Entities;
 using HealthMed.Domain.Errors;
@@ -20,6 +21,7 @@ namespace HealthMed.Application.Services
 
         private readonly IDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMailService _mailService;
         private readonly IUserRepository _userRepository;
         private readonly IAppointmentRepository _appointmentRepository;
 
@@ -30,11 +32,13 @@ namespace HealthMed.Application.Services
         public AppointmentService(
             IDbContext dbContext,
             IUnitOfWork unitOfWork,
+            IMailService mailService,
             IUserRepository userRepository,
             IAppointmentRepository appointmentRepository)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
         }
@@ -101,11 +105,32 @@ namespace HealthMed.Application.Services
                 appointment.Reserve(userPatient);
 
                 await _unitOfWork.SaveChangesAsync();
+                await SendNotificationAsync(userDoctor, userPatient, appointment);
             }
             catch (DbUpdateConcurrencyException)
             {
                 throw new DomainException(DomainErrors.Appointment.Overlap);
             }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private async Task SendNotificationAsync(User userDoctor, User userPatient, Appointment appointment)
+        {
+            var textBody = @$"Olá, Dr. {userDoctor.Name}!
+
+Você tem uma nova consulta marcada!
+Paciente: {userPatient.Name}.
+Data e horário: {appointment.AppointmentDate:dd/MM/yyyy} às {appointment.AppointmentDate:HH:mm:ss}.";
+
+            var htmlBody = @$"Olá, Dr. {userDoctor.Name}!<br /><br />
+Você tem uma nova consulta marcada!<br />
+Paciente: {userPatient.Name}.<br />
+Data e horário: {appointment.AppointmentDate:dd/MM/yyyy} às {appointment.AppointmentDate:HH:mm:ss}.";
+
+            await _mailService.SendEmailAsync(userDoctor.Email, "Health&Med - Nova consulta agendada", textBody, htmlBody);
         }
 
         #endregion

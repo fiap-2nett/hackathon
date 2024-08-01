@@ -9,6 +9,9 @@ using HealthMed.Domain.Core.Abstractions;
 using HealthMed.Infrastructure.Authentication;
 using HealthMed.Infrastructure.Authentication.Settings;
 using HealthMed.Infrastructure.Cryptography;
+using HealthMed.Infrastructure.Messaging.Settings;
+using HealthMed.Application.Core.Abstractions.Messaging;
+using HealthMed.Infrastructure.Messaging;
 
 namespace HealthMed.Infrastructure
 {
@@ -16,6 +19,9 @@ namespace HealthMed.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SettingsKey));
+            services.Configure<MailSettings>(configuration.GetSection(MailSettings.SettingsKey));
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -31,13 +37,12 @@ namespace HealthMed.Infrastructure
                     };
                 });
 
-            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SettingsKey));
-
             services.AddScoped<IUserSessionProvider, UserSessionProvider>();
             services.AddScoped<IJwtProvider, JwtProvider>();
 
             services.AddTransient<IPasswordHasher, PasswordHasher>();
             services.AddTransient<IPasswordHashChecker, PasswordHasher>();
+            services.AddTransient<IMailService, MailService>();
 
             return services;
         }

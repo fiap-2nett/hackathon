@@ -29,6 +29,8 @@ Stakeholders da Health&Med e pode ser encontrada em.:
 - Swashbuckle 6.5
 - FluentValidation 11.7
 - FluentAssertions 6.12
+- MailKit 4.7.1
+- MimeKit 4.7.1
 - NetArchTest 1.3
 - SqlServer 2019
 - Docker 24.0.5
