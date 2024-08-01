@@ -330,16 +330,16 @@ namespace HealthMed.Application.UnitTests.Scenarios
         public async Task UpdateAsync_Should_Throw_DomainException_For_Schedule_Conflict()
         {
             // Arrange
+            var dateNow = DateTime.UtcNow;
             var userId = 1;
             var scheduleId = 1;
-            var startDate = DateTime.Now.AddHours(1);
-            var endDate = DateTime.Now.AddHours(2);
+            var startDate = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, dateNow.Hour, 15, 0);
+            var endDate = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, dateNow.AddHours(2).Hour, 0, 0);
             var user = GetUserDoctor();
             var schedule = GetScheduleInvalid();
 
             _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
             _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(scheduleId)).ReturnsAsync(schedule);
-            _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(userId, scheduleId, startDate, endDate)).ReturnsAsync(true);
 
             // Act & Assert
             var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(userId, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
