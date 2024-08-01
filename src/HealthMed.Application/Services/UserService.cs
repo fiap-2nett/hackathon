@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HealthMed.Application.Contracts.Users;
 using HealthMed.Application.Core.Abstractions.Authentication;
@@ -55,6 +56,12 @@ namespace HealthMed.Application.Services
 
             if (!await _userRepository.IsEmailUniqueAsync(emailResult))
                 throw new DomainException(DomainErrors.User.DuplicateEmail);
+
+            if (userRole == UserRoles.Doctor && !ValidCrm(crm))
+                throw new DomainException(DomainErrors.User.InvalidCRM);
+
+            if (!IsCpfValid(cpf))
+                throw new DomainException(DomainErrors.User.InvalidCPF);
 
             var passwordHash = _passwordHasher.HashPassword(Domain.ValueObjects.Password.Create(password));
 
@@ -119,6 +126,19 @@ namespace HealthMed.Application.Services
              ).AnyAsync();
 
             return !userExists;
+        }
+
+        public bool IsCpfValid(string cpf)
+        {
+            string pattern = @"^\d+$";
+            return Regex.IsMatch(cpf, pattern) && cpf.Length == 11;
+        }
+
+        private bool ValidCrm(string crm)
+        {
+            if (crm is null || crm.Length != 10) return false;
+            string pattern = @"^\d{7}-[a-zA-Z]{2}$";
+            return Regex.IsMatch(crm, pattern);
         }
 
         #endregion
