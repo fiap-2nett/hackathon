@@ -204,6 +204,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
         [InlineData("41548568040656")]
         [InlineData("4154856804A")]
         [InlineData("415$$568040")]
+        [InlineData("00000000000")]
+        [InlineData("12345678912")]
         public async Task CreateAsync_Should_ThrowDomainException_WhenCPFAreInInvalidFormat(string cpf)
         {
             // Arrange
