@@ -6,11 +6,13 @@ using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Exceptions;
 using HealthMed.Domain.Repositories;
 using HealthMed.Domain.ValueObjects;
+using HealthMed.Domain.Extensions;
 using HealthMed.Infrastructure.Cryptography;
 using Moq;
+using Moq.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -48,8 +50,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _schedulesService = new SchedulesService(
                 _dbContextMock.Object,
                 _unitOfWorkMock.Object,
-                _scheduleRepositoryMock.Object,
                 _userRepositoryMock.Object,
+                _scheduleRepositoryMock.Object,
                 _appointmentRepositoryMock.Object
             );
         }
@@ -57,6 +59,91 @@ namespace HealthMed.Application.UnitTests.Scenarios
         #endregion
 
         #region Unit Tests
+
+        #region Get
+
+        /// <summary>
+        /// Teste: Recuperar uma lista paginada de horários quando existem horários cadastrados
+        /// </summary>
+        [Fact]
+        public async Task GetAsync_ShouldReturnPagedList_WhenSchedulesExist()
+        {
+            // Arrange
+            var schedules = GetListSchedule().AsQueryable();
+            _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
+
+            // Act
+            var result = await _schedulesService.GetAsync(1, 10);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Items.Count);
+        }
+
+        /// <summary>
+        /// Teste: Recuperar uma lista paginada vazia quando não existem horários cadastrados
+        /// </summary>
+        [Fact]
+        public async Task GetAsync_ShouldReturnEmptyPagedList_WhenNoSchedulesExist()
+        {
+            // Arrange
+            var schedules = new List<Schedule>().AsQueryable();
+            _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
+
+            // Act
+            var result = await _schedulesService.GetAsync(1, 10);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result.Items);
+        }
+
+        /// <summary>
+        /// Teste: Recuperar detalhes de um horário quando o horário existe
+        /// </summary>
+        [Fact]
+        public async Task GetByIdAsync_ShouldReturnDetailedScheduleResponse_WhenScheduleExists()
+        {
+            // Arrange
+            var schedule = GetScheduleValid();
+            var user = GetUserDoctor();
+
+            var schedules = new List<Schedule> { schedule }.AsQueryable();
+            var users = new List<User> { user }.AsQueryable();
+
+            _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
+            _dbContextMock.Setup(x => x.Set<User, int>()).ReturnsDbSet(users);
+
+            // Act
+            var result = await _schedulesService.GetByIdAsync(1);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Id);
+            Assert.Equal("John", result.Doctor.Name);
+        }
+
+        /// <summary>
+        /// Teste: Retornar nulo quando o horário não existe
+        /// </summary>
+        [Fact]
+        public async Task GetByIdAsync_ShouldReturnNull_WhenScheduleDoesNotExist()
+        {
+            // Arrange
+            var schedules = new List<Schedule>().AsQueryable();
+            var users = new List<User>().AsQueryable();
+
+            _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
+            _dbContextMock.Setup(x => x.Set<User, int>()).ReturnsDbSet(users);
+
+            // Act
+            var result = await _schedulesService.GetByIdAsync(1);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        #endregion
 
         #region Create
 
@@ -164,7 +251,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
             _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(schedule.Id)).ReturnsAsync(schedule);
             _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false);
-            _appointmentRepositoryMock.Setup(x => x.GetByAppointment(It.IsAny<Appointment>())).ReturnsAsync((Appointment)null);
+            _appointmentRepositoryMock.Setup(x => x.GetByDoctorAndDateAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync((Appointment)null);
             _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
 
             // Act
@@ -186,13 +273,13 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Arrange
             var userId = 1;
             var scheduleId = 1;
-            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
-            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var startDate = DateTime.Now.AddHours(1);
+            var endDate = DateTime.Now.AddHours(2);
 
             _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((User)null);
 
             // Act & Assert
-            var messsage =  await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(userId, scheduleId, startDate, endDate));
+            var messsage = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(userId, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             messsage.Equals("The user with the specified identifier was not found.");
         }
 
@@ -204,15 +291,15 @@ namespace HealthMed.Application.UnitTests.Scenarios
         {
             // Arrange
             var scheduleId = 1;
-            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
-            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var startDate = DateTime.Now.AddHours(1);
+            var endDate = DateTime.Now.AddHours(2);
             var user = GetUserDoctor();
 
             _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
             _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(scheduleId)).ReturnsAsync((Schedule)null);
 
             // Act & Assert
-            var message = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(user.Id, scheduleId, startDate, endDate));
+            var message = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(user.Id, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("The schedule with the specified identifier was not found.");
         }
 
@@ -223,8 +310,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
         public async Task UpdateAsync_Should_Throw_DomainException_For_Invalid_Schedule()
         {
             // Arrange
-            var startDate = RoundToNearestHour(DateTime.Now.AddHours(-1)); // Início no passado
-            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var startDate = DateTime.Now.AddHours(-1); // Início no passado
+            var endDate = DateTime.Now.AddHours(2);
             var user = GetUserDoctor();
             var schedule = GetScheduleInvalid();
 
@@ -232,7 +319,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(schedule.Id)).ReturnsAsync(schedule);
 
             // Act & Assert
-            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(user.Id, schedule.Id, startDate, endDate));
+            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(user.Id, schedule.Id, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
         }
 
@@ -245,8 +332,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Arrange
             var userId = 1;
             var scheduleId = 1;
-            var startDate = RoundToNearestHour(DateTime.Now.AddHours(1));
-            var endDate = RoundToNearestHour(DateTime.Now.AddHours(2));
+            var startDate = DateTime.Now.AddHours(1);
+            var endDate = DateTime.Now.AddHours(2);
             var user = GetUserDoctor();
             var schedule = GetScheduleInvalid();
 
@@ -255,7 +342,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(userId, scheduleId, startDate, endDate)).ReturnsAsync(true);
 
             // Act & Assert
-            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(userId, scheduleId, startDate, endDate));
+            var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(userId, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("There is a conflicting appointment in the specified period.");
         }
 
@@ -265,39 +352,43 @@ namespace HealthMed.Application.UnitTests.Scenarios
         #endregion
 
         #region Private Methods
+
+        private List<ScheduleTest> GetListSchedule()
+        {
+            return new List<ScheduleTest>
+            {
+                new ScheduleTest(1, 1, DateTime.UtcNow, DateTime.UtcNow.AddHours(1)),
+                new ScheduleTest(2, 1, DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3))
+            };
+        }
         private ScheduleTest GetScheduleValid() => new ScheduleTest
         (
             idSchedule: 1,
             idDoctor: 1,
-            startDate: RoundToNearestHour(DateTime.UtcNow.AddHours(1)),
-            endDate: RoundToNearestHour(DateTime.UtcNow.AddHours(3))
+            startDate: DateTime.UtcNow.AddHours(1),
+            endDate: DateTime.UtcNow.AddHours(3)
         );
         private ScheduleTest GetScheduleInvalid() => new ScheduleTest
         (
             idSchedule: 2,
             idDoctor: 1,
-            startDate: RoundToNearestHour(DateTime.UtcNow.AddHours(-1)),
-            endDate: RoundToNearestHour(DateTime.UtcNow.AddHours(3))
+            startDate: DateTime.UtcNow.AddHours(-1),
+            endDate: DateTime.UtcNow.AddHours(3)
         );
-
-        private DateTime RoundToNearestHour(DateTime dateTime)
+        private List<(DateTime StartDate, DateTime EndDate)> GetDynamicSchedulesValid()
         {
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, 0, 0);
-        }
-        private List<dynamic> GetDynamicSchedulesValid()
-        {
-            return new List<dynamic>
+            return new List<(DateTime StartData, DateTime EndDate)>
             {
-                new  ScheduleDto { StartDate = RoundToNearestHour(DateTime.Now.AddHours(1)), EndDate = RoundToNearestHour(DateTime.Now.AddHours(2)) },
-                new  ScheduleDto { StartDate = RoundToNearestHour(DateTime.Now.AddHours(3)), EndDate = RoundToNearestHour(DateTime.Now.AddHours(4)) }
+                (DateTime.Now.AddHours(1).WithoutSeconds(), DateTime.Now.AddHours(2).WithoutSeconds()),
+                (DateTime.Now.AddHours(3).WithoutSeconds(), DateTime.Now.AddHours(4).WithoutSeconds())
             };
         }
-        private List<dynamic> GetDynamicSchedulesInvalid()
+        private List<(DateTime StartDate, DateTime EndDate)> GetDynamicSchedulesInvalid()
         {
-            return new List<dynamic>
+            return new List<(DateTime StartDate, DateTime EndDate)>
             {
-                new  ScheduleDto { StartDate = RoundToNearestHour(DateTime.Now.AddHours(-1)), EndDate = RoundToNearestHour(DateTime.Now.AddHours(2)) },
-                new  ScheduleDto { StartDate = RoundToNearestHour(DateTime.Now.AddHours(-3)), EndDate = RoundToNearestHour(DateTime.Now.AddHours(4)) }
+                (DateTime.Now.AddHours(-1).WithoutSeconds(), DateTime.Now.AddHours(2).WithoutSeconds()),
+                (DateTime.Now.AddHours(-3).WithoutSeconds(), DateTime.Now.AddHours(4).WithoutSeconds())
             };
         }
         private UserTest GetUserDoctor() => new UserTest
@@ -310,7 +401,6 @@ namespace HealthMed.Application.UnitTests.Scenarios
             userRole: UserRoles.Doctor,
             passwordHash: new PasswordHasher().HashPassword(Password.Create("John@123"))
         );
-
         private UserTest GetUserPatient() => new UserTest
         (
             idUser: 2,
