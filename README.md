@@ -132,3 +132,21 @@ Caso queria uma versão de resultado com mais detalhes, execute o seguinte coman
 ```sh
 $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste.csproj>
 ```
+
+## Casos de Uso
+
+Abaixo temos alguns cenários disponíveis onde a plataforma Health&Med API deve 
+ser utilizada.:
+
+### 1. Paciente
+
+#### 1.1 Cadastro de Usuário
+
+Os pacientes que desejarem aderir à plataforma Health&Med API devem
+primeiro efetuar um cadastro.:
+
+
+
+### 2.Médico
+
+#### 2.1 Cadastro de Usuário
