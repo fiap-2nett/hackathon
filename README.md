@@ -6,6 +6,18 @@ A Health&Med API é uma plataforma que conecta médicos e pacientes possibilitan
 de forma rápida e assertiva. A plataforma ainda possibilita aos médicos a customização de horários disponíveis
 para consultas.
 
+## Clean Architecture
+
+O Health&Med API é altamente baseado em Clean Architecture (Arquitetura Limpa),
+ou seja, projetado com foco na separação de preocupações e na dependência de
+direção única, o que significa que as partes mais internas do sistema não
+conhecem as partes mais externas.
+
+Além disso o projeto mantém uma abordagem focada na modelagem de domínios
+"Domain-Driven Design" (DDD), ou seja, busca alinhar o desenvolvimento da
+solução com o domínio do problema, resultando em sistemas mais flexíveis,
+compreensíveis e que melhor atendem às necessidades do negócio.
+
 ## Documentação de Requisitos
 
 A documentação de Requisitos Funcionais (RF), Não Funcionais (RNF) e
@@ -110,6 +122,8 @@ a integridade da solução.:
 
 ![CI/CD Pipeline](doc/assets/img/pipeline.png)
 
+### Publicação da Imagem do Container
+
 Além disso, a CI/CD Pipeline é responsável ainda por
 realizar a publicação da imagem do Container da solução no Docker Hub.:
 
@@ -138,10 +152,9 @@ $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste
 Abaixo temos alguns cenários disponíveis onde a plataforma Health&Med API deve 
 ser utilizada.:
 
-**ATENÇÃO**.: O "Health&Med Portal" está nos fluxos apenas para facilitar o entendimento dos Casos de Uso,
+**ATENÇÃO**.: ***O Health&Med Portal está nos fluxos apenas para facilitar o entendimento dos Casos de Uso,
 porém não foi desenvolvido visto que foge ao escopo previsto no Hackathon.
-Toda interação com a plataforma deve ser validada via Swagger ou diretamente via requisições de API.
-
+Toda interação com a plataforma deve ser validada via Swagger ou diretamente via requisições de API.***
 
 ### 1. Paciente
 
@@ -152,6 +165,12 @@ primeiro efetuar um cadastro.:
 
 ![Cadastro de Paciente](doc/assets/img/useCases/CadastroPaciente.png)
 
+#### 1.2 Agendamento de Consultas
+
+Os pacientes podem efetuar o agendamento de suas consultas médicas.:
+
+![Agendamento de Consultas](doc/assets/img/useCases/AgendamentoConsultas.png)
+
 ### 2.Médico
 
 #### 2.1 Cadastro de Médico
@@ -160,3 +179,45 @@ Os médicos que desejarem atender pacientes por meio da plataforma
 devem primeiro efetuar um cadastro.:
 
 ![Cadastro de Medico](doc/assets/img/useCases/CadastroMedico.png)
+
+#### 2.2 Cadastro de Horário para Atendimento
+
+Os médicos podem efetuar o cadastro de seus horários livres para atendimento.:
+
+![Cadastro de Horario](doc/assets/img/useCases/CadastroHorario.png)
+
+#### 2.3 Atualização de Horário para Atendimento
+
+Os médicos podem efetuar a atualização de seus horários livres para atendimento.:
+
+![Atualizacao de Horario](doc/assets/img/useCases/AtualizarHorario.png)
+
+### 3. Ambos (Médicos e/ou Pacientes)
+
+#### 3.1 Obtenção de Consultas Agendadas
+
+Os pacientes e/ou médicos podem verificar as consultas agendadas.:
+
+![Verificar Consultas Agendadas](doc/assets/img/useCases/VerificarConsultasAgendadas.png)
+
+#### 3.2 Obtenção de Horários Disponíveis para Agendamento
+
+Os pacientes e/ou médicos podem verificar os horários disponíveis para agendamento de
+consultas.:
+
+![Verificar Horários](doc/assets/img/useCases/VerificarHorarios.png)
+
+## Envio de Emails
+
+Conforme evidenciado pelo Caso de Uso 1.2 acima a Health&Med API envia emails para
+confirmar o agendamento de consultas dos pacientes.
+Para ilustrar esta funcionalidade utilizamos o [Mailtrap](https://mailtrap.io/)
+uma ferramenta utilizada para testar, visualizar e depurar emails
+enviados por aplicações em ambientes de desenvolvimento e teste.
+Ele permite que desenvolvedores verifiquem se os emails estão sendo enviados
+corretamente, sem a necessidade de enviar emails reais para endereços de
+usuários.
+
+Vide abaixo um exemplo enviado via Health&Med API.:
+
+![Exemplo Email](doc/assets/img/useCases/MailExample.png)
