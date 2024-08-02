@@ -6,6 +6,18 @@ A Health&Med API é uma plataforma que conecta médicos e pacientes possibilitan
 de forma rápida e assertiva. A plataforma ainda possibilita aos médicos a customização de horários disponíveis
 para consultas.
 
+## Clean Architecture
+
+A Health&Med API é altamente baseada em Clean Architecture (Arquitetura Limpa),
+ou seja, projetada com foco na separação de preocupações e na dependência de
+direção única, o que significa que as partes mais internas do sistema não
+conhecem as partes mais externas.
+
+Além disso o projeto mantém uma abordagem focada na modelagem de domínios
+"Domain-Driven Design" (DDD), ou seja, busca alinhar o desenvolvimento da
+solução com o domínio do problema, resultando em sistemas mais flexíveis,
+compreensíveis e que melhor atendem às necessidades do negócio.
+
 ## Documentação de Requisitos
 
 A documentação de Requisitos Funcionais (RF), Não Funcionais (RNF) e
@@ -39,6 +51,7 @@ Stakeholders da Health&Med e pode ser encontrada em.:
 ## Arquitetura, Padrões Arquiteturais e Convenções
 
 - REST Api
+- Clean Architecture
 - Domain-Driven Design
 - EF Code-first
 - Service Pattern
@@ -65,7 +78,7 @@ A solução da Health&Med API é composta pelos seguintes projetos:
 A Health&Med API utiliza o paradigma de CodeFirst através dos recursos disponibilizados pelo Entity Framework, no entanto para melhor
 entendimento da modelagem de dados apresentamos a seguir o MER e suas respectivas definições:
 
-![Modelagem de Dados](doc/assets/img/der.png)
+![Modelagem de Dados](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/der.png)
 
 Com base na imagem acima iremos detalhar as tabelas e os dados contidos em cada uma delas:
 
@@ -84,7 +97,7 @@ Toda a infraestrutura necessária para execução da Health&Med API
 deve ser provisionada automaticamente configurando o **"docker-compose"**
 como projeto de inicialização no Visual Studio.:
 
-![Startup Project](doc/assets/img/startup.png)
+![Startup Project](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/startup.png)
 
 Também é possível executar a solução diretamente sem a necessidade do Visual Studio,
 para tal, apenas necessitamos do Docker previamente instalado.
@@ -99,7 +112,7 @@ Após rodar o projeto a iteração pode ser feita via Swagger pelo link abaixo.:
 
 https://localhost:5001/swagger/index.html
 
-![Swagger](doc/assets/img/swagger.png)
+![Swagger](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/swagger.png)
 
 
 ## CI/CD Pipeline
@@ -110,12 +123,16 @@ pelos membros da equipe (CI) e a disponibilização e implantação do software 
 incluso neste processo a execução de Testes Unitários e Arquiteturais garantindo sempre
 a integridade da solução.:
 
-![CI/CD Pipeline](doc/assets/img/pipeline.png)
+![CI/CD Pipeline](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/pipeline.png)
+
+### Publicação da Imagem do Container
 
 Além disso, a CI/CD Pipeline é responsável ainda por
 realizar a publicação da imagem do Container da solução no Docker Hub.:
 
 [Link para Imagem no Docker Hub](https://hub.docker.com/repository/docker/techchallengephase2/healthmed-api/general)
+
+### Execução Manual de Testes
 
 Se preferir, os testes também podem ser executados localmente via dotnet CLI. Para isso rode os comandos abaixo.:
 ```sh
@@ -134,3 +151,109 @@ Caso queria uma versão de resultado com mais detalhes, execute o seguinte coman
 ```sh
 $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste.csproj>
 ```
+
+## Premissas
+
+A seguir veremos alguns casos de uso da Health&Med API, mas antes é importante
+elucidar as premissas necessárias para o correto funcionamento da plataforma.:
+
+1. Todas as consultas agendadas pela plataforma assumem por padrão a duração de 1 hora;
+
+2. Para evitar o problema de concorrência ("Race Condition"), ou seja, vários pacientes tentando marcar múltiplas
+    consultas na mesma faixa de dia e horário para o mesmo médico, foi utilizado o recurso de
+    ROWVERSION do EF Core de maneira a implementar um controle no modelo Optimistic Locking
+    do SQL Server.
+
+### ROWVERSION do EF Core
+
+No Entity Framework Core (EF Core), o ROWVERSION é uma forma de controle
+de concorrência otimista que usa um tipo especial de coluna no banco de dados
+para detectar e resolver conflitos de concorrência.
+
+Essa coluna é geralmente do tipo rowversion ou timestamp no SQL Server.
+
+### Modelo Optimistic Locking do SQL Server.
+
+O modelo de Optimistic Locking (ou bloqueio otimista) no SQL Server é uma técnica
+de controle de concorrência usada para gerenciar o acesso simultâneo aos dados
+por múltiplas transações, minimizando a possibilidade de conflitos e
+evitando bloqueios prolongados que podem afetar o desempenho do sistema.
+
+Este modelo assume que os conflitos de acesso a dados são raros e, portanto,
+permite múltiplas leituras e gravações simultâneas, detectando e resolvendo
+conflitos somente quando eles realmente ocorrem.
+
+## Casos de Uso
+
+Abaixo temos alguns cenários disponíveis que descrevem como a plataforma Health&Med API pode 
+ser utilizada.:
+
+**ATENÇÃO**.: ***O Health&Med Portal está nos fluxos apenas para facilitar o entendimento dos Casos de Uso,
+porém não foi desenvolvido visto que foge ao escopo previsto no Hackathon.
+Toda interação com a plataforma deve ser validada via Swagger ou diretamente via requisições de API.***
+
+### 1. Paciente
+
+#### 1.1 Cadastro de Usuário
+
+Os pacientes que desejarem aderir à plataforma Health&Med API devem
+primeiro efetuar um cadastro.:
+
+![Cadastro de Paciente](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroPaciente.png)
+
+#### 1.2 Agendamento de Consultas
+
+Os pacientes podem efetuar o agendamento de suas consultas médicas.:
+
+![Agendamento de Consultas](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/AgendamentoConsultas.png)
+
+### 2.Médico
+
+#### 2.1 Cadastro de Médico
+
+Os médicos que desejarem atender pacientes por meio da plataforma
+devem primeiro efetuar um cadastro.:
+
+![Cadastro de Medico](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroMedico.png)
+
+#### 2.2 Cadastro de Horário para Atendimento
+
+Os médicos podem efetuar o cadastro de seus horários livres para atendimento.:
+
+![Cadastro de Horario](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroHorario.png)
+
+#### 2.3 Atualização de Horário para Atendimento
+
+Os médicos podem efetuar a atualização de seus horários livres para atendimento.:
+
+![Atualizacao de Horario](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/AtualizarHorario.png)
+
+### 3. Ambos (Médicos e/ou Pacientes)
+
+#### 3.1 Obtenção de Consultas Agendadas
+
+Os pacientes e/ou médicos podem verificar as consultas agendadas.:
+
+![Verificar Consultas Agendadas](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/VerificarConsultasAgendadas.png)
+
+#### 3.2 Obtenção de Horários Disponíveis para Agendamento
+
+Os pacientes e/ou médicos podem verificar os horários disponíveis para agendamento de
+consultas.:
+
+![Verificar Horários](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/VerificarHorarios.png)
+
+## Envio de Emails
+
+Conforme evidenciado pelo Caso de Uso 1.2 acima a Health&Med API envia emails para
+confirmar o agendamento de consultas dos pacientes.
+Para ilustrar esta funcionalidade utilizamos o [Mailtrap](https://mailtrap.io/)
+uma ferramenta utilizada para testar, visualizar e depurar emails
+enviados por aplicações em ambientes de desenvolvimento e teste.
+Ele permite que desenvolvedores verifiquem se os emails estão sendo enviados
+corretamente, sem a necessidade de enviar emails reais para endereços de
+usuários.
+
+Vide abaixo um exemplo enviado via Health&Med API.:
+
+![Exemplo Email](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/mailExample.png)
