@@ -150,6 +150,37 @@ Caso queria uma versão de resultado com mais detalhes, execute o seguinte coman
 $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste.csproj>
 ```
 
+## Premissas
+
+A seguir veremos alguns casos de uso da Health&Med API, mas antes é importante
+elucidar as premissas necessárias para o correto funcionamento da plataforma.:
+
+1. Todas as consultas agendadas pela plataforma assumem por padrão a duração de 1 hora;
+
+2. Para evitar o problema de concorrência ("Race Condition"), ou seja, vários pacientes tentando marcar múltiplas
+    consultas na mesma faixa de dia e horário para o mesmo médico, foi utilizado o recurso de
+    ROWVERSION do EF Core de maneira a implementar um controle no modelo Optimistic Locking
+    do SQL Server.
+
+### ROWVERSION do EF Core
+
+No Entity Framework Core (EF Core), o ROWVERSION é uma forma de controle
+de concorrência otimista que usa um tipo especial de coluna no banco de dados
+para detectar e resolver conflitos de concorrência.
+
+Essa coluna é geralmente do tipo rowversion ou timestamp no SQL Server.
+
+### Modelo Optimistic Locking do SQL Server.
+
+O modelo de Optimistic Locking (ou bloqueio otimista) no SQL Server é uma técnica
+de controle de concorrência usada para gerenciar o acesso simultâneo aos dados
+por múltiplas transações, minimizando a possibilidade de conflitos e
+evitando bloqueios prolongados que podem afetar o desempenho do sistema.
+
+Este modelo assume que os conflitos de acesso a dados são raros e, portanto,
+permite múltiplas leituras e gravações simultâneas, detectando e resolvendo
+conflitos somente quando eles realmente ocorrem.
+
 ## Casos de Uso
 
 Abaixo temos alguns cenários disponíveis que descrevem como a plataforma Health&Med API pode 
