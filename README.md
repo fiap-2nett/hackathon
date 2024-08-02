@@ -130,6 +130,8 @@ realizar a publicação da imagem do Container da solução no Docker Hub.:
 
 [Link para Imagem no Docker Hub](https://hub.docker.com/repository/docker/techchallengephase2/healthmed-api/general)
 
+### Execução Manual de Testes
+
 Se preferir, os testes também podem ser executados localmente via dotnet CLI. Para isso rode os comandos abaixo.:
 ```sh
 $ dotnet test tests/HealthMed.Application.UnitTests/HealthMed.Application.UnitTests.csproj --no-build --verbosity normal
