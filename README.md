@@ -138,6 +138,11 @@ $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste
 Abaixo temos alguns cenários disponíveis onde a plataforma Health&Med API deve 
 ser utilizada.:
 
+**ATENÇÃO**.: O "Health&Med Portal" está nos fluxos apenas para facilitar o entendimento dos Casos de Uso,
+porém não foi desenvolvido visto que foge ao escopo previsto no Hackathon.
+Toda interação com a plataforma deve ser validada via Swagger ou diretamente via requisições de API.
+
+
 ### 1. Paciente
 
 #### 1.1 Cadastro de Usuário
@@ -145,8 +150,13 @@ ser utilizada.:
 Os pacientes que desejarem aderir à plataforma Health&Med API devem
 primeiro efetuar um cadastro.:
 
-
+![Cadastro de Paciente](doc/assets/img/useCases/CadastroPaciente.png)
 
 ### 2.Médico
 
-#### 2.1 Cadastro de Usuário
+#### 2.1 Cadastro de Médico
+
+Os médicos que desejarem atender pacientes por meio da plataforma
+devem primeiro efetuar um cadastro.:
+
+![Cadastro de Medico](doc/assets/img/useCases/CadastroMedico.png)
