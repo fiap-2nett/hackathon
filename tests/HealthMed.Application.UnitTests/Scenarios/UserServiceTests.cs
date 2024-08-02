@@ -6,22 +6,18 @@ using HealthMed.Application.Core.Abstractions.Cryptography;
 using HealthMed.Application.Core.Abstractions.Data;
 using HealthMed.Application.Services;
 using HealthMed.Application.UnitTests.TestEntities;
-using HealthMed.Domain.Entities;
 using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
 using HealthMed.Domain.Repositories;
-using HealthMed.Domain.ValueObjects;
 using HealthMed.Infrastructure.Authentication;
 using HealthMed.Infrastructure.Authentication.Settings;
 using HealthMed.Infrastructure.Cryptography;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
-using static HealthMed.Domain.Errors.DomainErrors;
-using Email = HealthMed.Domain.ValueObjects.Email;
-using Password = HealthMed.Domain.ValueObjects.Password;
-using User = HealthMed.Domain.Entities.User;
+using HealthMed.Domain.ValueObjects;
+using HealthMed.Domain.Entities;
 
 namespace HealthMed.Application.UnitTests.Scenarios
 {
