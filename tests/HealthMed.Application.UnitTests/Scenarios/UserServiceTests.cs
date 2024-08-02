@@ -6,18 +6,18 @@ using HealthMed.Application.Core.Abstractions.Cryptography;
 using HealthMed.Application.Core.Abstractions.Data;
 using HealthMed.Application.Services;
 using HealthMed.Application.UnitTests.TestEntities;
-using HealthMed.Domain.Entities;
 using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
 using HealthMed.Domain.Repositories;
-using HealthMed.Domain.ValueObjects;
 using HealthMed.Infrastructure.Authentication;
 using HealthMed.Infrastructure.Authentication.Settings;
 using HealthMed.Infrastructure.Cryptography;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
+using HealthMed.Domain.ValueObjects;
+using HealthMed.Domain.Entities;
 
 namespace HealthMed.Application.UnitTests.Scenarios
 {
@@ -164,6 +164,61 @@ namespace HealthMed.Application.UnitTests.Scenarios
                 .ThrowAsync<ArgumentException>();
 
             _userRepositoryMock.Verify(x => x.Insert(It.IsAny<User>()), Times.Never());
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData(null)]
+        [InlineData("415485")]
+        [InlineData("415485656A9S")]
+        [InlineData("415g85-m!")]
+        [InlineData("abcdef-24")]
+        public async Task CreateAsync_Should_ThrowDomainException_WhenCRMAreInInvalidFormat(string crm)
+        {
+            // Arrange
+            _userRepositoryMock.Setup(x => x.IsEmailUniqueAsync(It.IsAny<Email>())).ReturnsAsync(true);
+
+            var userService = new UserService(_dbContextMock.Object, _unitOfWorkMock.Object, _jwtProvider,
+                _userRepositoryMock.Object, _passwordHasher);
+
+            // Act            
+            var action = () => userService.CreateAsync("John", "41548568040", crm, "john.doe@test.com", UserRoles.Doctor, "John@123");
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<DomainException>()
+                .WithMessage(DomainErrors.User.InvalidCRM.Message);
+
+            _userRepositoryMock.Verify(x => x.Insert(It.IsAny<Domain.Entities.User>()), Times.Never());
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
+        }
+
+        [Theory]
+        [InlineData("415485")]
+        [InlineData("41548568040656")]
+        [InlineData("4154856804A")]
+        [InlineData("415$$568040")]
+        [InlineData("00000000000")]
+        [InlineData("12345678912")]
+        public async Task CreateAsync_Should_ThrowDomainException_WhenCPFAreInInvalidFormat(string cpf)
+        {
+            // Arrange
+            _userRepositoryMock.Setup(x => x.IsEmailUniqueAsync(It.IsAny<Email>())).ReturnsAsync(true);
+
+            var userService = new UserService(_dbContextMock.Object, _unitOfWorkMock.Object, _jwtProvider,
+                _userRepositoryMock.Object, _passwordHasher);
+
+            // Act            
+            var action = () => userService.CreateAsync("John", cpf, "4154856-BR", "john.doe@test.com", UserRoles.Patient, "John@123");
+
+            // Assert
+            await action.Should()
+                        .ThrowAsync<DomainException>()
+                        .WithMessage(DomainErrors.User.InvalidCPF.Message);
+
+            _userRepositoryMock.Verify(x => x.Insert(It.IsAny<Domain.Entities.User>()), Times.Never());
             _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
         }
 

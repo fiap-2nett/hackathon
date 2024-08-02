@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HealthMed.Application.Contracts.Users;
 using HealthMed.Application.Core.Abstractions.Authentication;
@@ -12,6 +13,7 @@ using HealthMed.Domain.Errors;
 using HealthMed.Domain.Exceptions;
 using HealthMed.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using Microsoft.SqlServer.Server;
 
 namespace HealthMed.Application.Services
@@ -55,6 +57,12 @@ namespace HealthMed.Application.Services
 
             if (!await _userRepository.IsEmailUniqueAsync(emailResult))
                 throw new DomainException(DomainErrors.User.DuplicateEmail);
+
+            if (userRole == UserRoles.Doctor && !ValidCrm(crm))
+                throw new DomainException(DomainErrors.User.InvalidCRM);
+
+            if (!IsCpfValid(cpf))
+                throw new DomainException(DomainErrors.User.InvalidCPF);
 
             var passwordHash = _passwordHasher.HashPassword(Domain.ValueObjects.Password.Create(password));
 
@@ -119,6 +127,57 @@ namespace HealthMed.Application.Services
              ).AnyAsync();
 
             return !userExists;
+        }
+
+        public bool IsCpfValid(string cpf)
+        {
+            string pattern = @"^\d+$";
+
+            if (cpf.Length != 11) return false;
+
+            if (new string(cpf[0], cpf.Length) == cpf) return false;
+
+            if (!Regex.IsMatch(cpf, pattern)) return false;
+
+            int[] firstMultipliers = new int[9] { 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int[] secondMultipliers = new int[10] { 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int sum;
+            string digit;
+            int reminder;
+
+            var cpfTemp = cpf.Substring(0, 9);
+            sum = 0;
+            for (int i = 0; i < 9; i++)
+            {
+                sum += int.Parse(cpfTemp[i].ToString()) * firstMultipliers[i];
+            }
+            reminder = sum % 11;
+            if (reminder < 2) reminder = 0;
+            else reminder = 11 - reminder;
+
+            digit = reminder.ToString();
+            cpfTemp = cpfTemp + digit;
+
+            sum = 0;
+
+            for (int i = 0; i < 10; i++)
+            {
+                sum += int.Parse(cpfTemp[i].ToString()) * secondMultipliers[i];
+            }
+
+            reminder = sum % 11;
+            if (reminder < 2) reminder = 0;
+            else reminder = 11 - reminder;
+            digit = digit + reminder.ToString();
+
+            return cpf.EndsWith(digit);
+        }
+
+        private bool ValidCrm(string crm)
+        {
+            if (crm is null || crm.Length != 10) return false;
+            string pattern = @"^\d{7}-[a-zA-Z]{2}$";
+            return Regex.IsMatch(crm, pattern);
         }
 
         #endregion
