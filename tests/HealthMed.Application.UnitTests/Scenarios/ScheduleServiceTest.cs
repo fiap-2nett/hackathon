@@ -330,7 +330,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
         public async Task UpdateAsync_Should_Throw_DomainException_For_Schedule_Conflict()
         {
             // Arrange
-            var dateNow = DateTime.UtcNow;
+            var dateNow = DateTime.Now;
             var userId = 1;
             var scheduleId = 1;
             var startDate = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, dateNow.Hour, 15, 0);
@@ -357,23 +357,23 @@ namespace HealthMed.Application.UnitTests.Scenarios
         {
             return new List<ScheduleTest>
             {
-                new ScheduleTest(1, 1, DateTime.UtcNow, DateTime.UtcNow.AddHours(1)),
-                new ScheduleTest(2, 1, DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3))
+                new ScheduleTest(1, 1, DateTime.Now, DateTime.Now.AddHours(1)),
+                new ScheduleTest(2, 1, DateTime.Now.AddHours(2), DateTime.Now.AddHours(3))
             };
         }
         private ScheduleTest GetScheduleValid() => new ScheduleTest
         (
             idSchedule: 1,
             idDoctor: 1,
-            startDate: DateTime.UtcNow.AddHours(1),
-            endDate: DateTime.UtcNow.AddHours(3)
+            startDate: DateTime.Now.AddHours(1),
+            endDate: DateTime.Now.AddHours(3)
         );
         private ScheduleTest GetScheduleInvalid() => new ScheduleTest
         (
             idSchedule: 2,
             idDoctor: 1,
-            startDate: DateTime.UtcNow.AddHours(-1),
-            endDate: DateTime.UtcNow.AddHours(3)
+            startDate: DateTime.Now.AddHours(-1),
+            endDate: DateTime.Now.AddHours(3)
         );
         private List<(DateTime StartDate, DateTime EndDate)> GetDynamicSchedulesValid()
         {

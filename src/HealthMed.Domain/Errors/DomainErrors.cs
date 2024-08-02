@@ -119,7 +119,7 @@ namespace HealthMed.Domain.Errors
 
             public static Error DifferentDate => new Error(
                 "Schedule.DifferentDate",
-                "The start date cannot be different from the end date.");
+                "The start date and time cannot be the same as the end date and time.");
         }
 
         public static class Appointment
