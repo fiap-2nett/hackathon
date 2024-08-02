@@ -1,19 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using HealthMed.Application.Core.Abstractions.Data;
 using HealthMed.Application.Services;
 using HealthMed.Application.UnitTests.TestEntities;
 using HealthMed.Domain.Entities;
 using HealthMed.Domain.Enumerations;
 using HealthMed.Domain.Exceptions;
+using HealthMed.Domain.Extensions;
 using HealthMed.Domain.Repositories;
 using HealthMed.Domain.ValueObjects;
-using HealthMed.Domain.Extensions;
 using HealthMed.Infrastructure.Cryptography;
 using Moq;
 using Moq.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace HealthMed.Application.UnitTests.Scenarios
@@ -70,6 +70,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
         {
             // Arrange
             var schedules = GetListSchedule().AsQueryable();
+
             _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
 
             // Act
@@ -88,6 +89,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
         {
             // Arrange
             var schedules = new List<Schedule>().AsQueryable();
+
             _dbContextMock.Setup(x => x.Set<Schedule, int>()).ReturnsDbSet(schedules);
 
             // Act
@@ -140,7 +142,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             var result = await _schedulesService.GetByIdAsync(1);
 
             // Assert
-            Assert.Null(result);
+            Assert.Null(result);            
         }
 
         #endregion
@@ -155,9 +157,9 @@ namespace HealthMed.Application.UnitTests.Scenarios
         {
             var schedules = GetDynamicSchedulesValid();
             var user = GetUserDoctor();
+
             _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
             _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false);
-            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
 
             // Act
             var result = await _schedulesService.CreateAsync(user.Id, schedules);
@@ -165,6 +167,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Assert
             Assert.NotNull(result);
             Assert.Equal(schedules.Count, result.Count);
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Once);
         }
 
         /// <summary>
@@ -176,6 +180,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Arrange
             var userId = 1;
             var schedules = GetDynamicSchedulesValid();
+
             _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((User)null);
 
             // Act & Assert
@@ -209,11 +214,14 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Arrange
             var schedules = GetDynamicSchedulesInvalid();
             var user = GetUserDoctor();
+
             _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
 
             // Act & Assert
             var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.CreateAsync(user.Id, schedules));
             message.Equals("Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
         /// <summary>
@@ -232,6 +240,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Act & Assert
             var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.CreateAsync(user.Id, schedules));
             message.Equals("There is a conflicting appointment in the specified period.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
         #endregion
@@ -252,7 +262,6 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _scheduleRepositoryMock.Setup(x => x.GetByIdAsync(schedule.Id)).ReturnsAsync(schedule);
             _scheduleRepositoryMock.Setup(x => x.HasScheduleConflictAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false);
             _appointmentRepositoryMock.Setup(x => x.GetByDoctorAndDateAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync((Appointment)null);
-            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never());
 
             // Act
             var result = await _schedulesService.Update(user.Id, schedule.IdDoctor, schedule.StartDate, schedule.EndDate);
@@ -262,6 +271,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             Assert.Equal(schedule.Id, result.Id);
             Assert.Equal(schedule.StartDate, result.StartDate);
             Assert.Equal(schedule.EndDate, result.EndDate);
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Once);
         }
 
         /// <summary>
@@ -281,6 +292,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Act & Assert
             var messsage = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(userId, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             messsage.Equals("The user with the specified identifier was not found.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
         /// <summary>
@@ -301,6 +314,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Act & Assert
             var message = await Assert.ThrowsAsync<NotFoundException>(() => _schedulesService.Update(user.Id, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("The schedule with the specified identifier was not found.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
         /// <summary>
@@ -321,6 +336,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Act & Assert
             var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(user.Id, schedule.Id, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("Invalid schedule. Check for overlapping times, broken schedules, or incorrect duration.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
         /// <summary>
@@ -344,6 +361,8 @@ namespace HealthMed.Application.UnitTests.Scenarios
             // Act & Assert
             var message = await Assert.ThrowsAsync<DomainException>(() => _schedulesService.Update(userId, scheduleId, startDate.WithoutSeconds(), endDate.WithoutSeconds()));
             message.Equals("There is a conflicting appointment in the specified period.");
+
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
 
 
