@@ -165,12 +165,15 @@ namespace HealthMed.Application.Services
                     if (existingAppointment.IdPatient.HasValue)
                     {
                         existingAppointment.Cancel();
+                        _appointmentRepository.Insert(newAppointment);
                     }
-
-                    _appointmentRepository.Insert(newAppointment);
+                    else
+                    {
+                        existingAppointment.ChangeLastUpdateDate();
+                    }
                 }
 
-                oldAppointments.Remove(newAppointment);
+                oldAppointments.RemoveAll(a => a.IdDoctor == newAppointment.IdDoctor && a.AppointmentDate == newAppointment.AppointmentDate);
             }
 
             foreach (var oldAppointment in oldAppointments)

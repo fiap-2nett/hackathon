@@ -46,6 +46,11 @@ namespace HealthMed.Domain.Entities
 
         #region Public Methods
 
+        public void ChangeLastUpdateDate()
+        {
+            LastUpdatedAt = DateTime.Now;
+        }
+
         public void Cancel()
         {
             IdAppointmentStatus = (byte)Enums.AppointmentStatus.Canceled;
