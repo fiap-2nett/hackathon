@@ -76,7 +76,7 @@ A solução da Health&Med API é composta pelos seguintes projetos:
 A Health&Med API utiliza o paradigma de CodeFirst através dos recursos disponibilizados pelo Entity Framework, no entanto para melhor
 entendimento da modelagem de dados apresentamos a seguir o MER e suas respectivas definições:
 
-![Modelagem de Dados](doc/assets/img/der.png)
+![Modelagem de Dados](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/der.png)
 
 Com base na imagem acima iremos detalhar as tabelas e os dados contidos em cada uma delas:
 
@@ -95,7 +95,7 @@ Toda a infraestrutura necessária para execução da Health&Med API
 deve ser provisionada automaticamente configurando o **"docker-compose"**
 como projeto de inicialização no Visual Studio.:
 
-![Startup Project](doc/assets/img/startup.png)
+![Startup Project](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/startup.png)
 
 Também é possível executar a solução diretamente sem a necessidade do Visual Studio,
 para tal, apenas necessitamos do Docker previamente instalado.
@@ -110,7 +110,7 @@ Após rodar o projeto a iteração pode ser feita via Swagger pelo link abaixo.:
 
 https://localhost:5001/swagger/index.html
 
-![Swagger](doc/assets/img/swagger.png)
+![Swagger](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/swagger.png)
 
 
 ## CI/CD Pipeline
@@ -121,7 +121,7 @@ pelos membros da equipe (CI) e a disponibilização e implantação do software 
 incluso neste processo a execução de Testes Unitários e Arquiteturais garantindo sempre
 a integridade da solução.:
 
-![CI/CD Pipeline](doc/assets/img/pipeline.png)
+![CI/CD Pipeline](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/pipeline.png)
 
 ### Publicação da Imagem do Container
 
@@ -166,13 +166,13 @@ Toda interação com a plataforma deve ser validada via Swagger ou diretamente v
 Os pacientes que desejarem aderir à plataforma Health&Med API devem
 primeiro efetuar um cadastro.:
 
-![Cadastro de Paciente](doc/assets/img/useCases/CadastroPaciente.png)
+![Cadastro de Paciente](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroPaciente.png)
 
 #### 1.2 Agendamento de Consultas
 
 Os pacientes podem efetuar o agendamento de suas consultas médicas.:
 
-![Agendamento de Consultas](doc/assets/img/useCases/AgendamentoConsultas.png)
+![Agendamento de Consultas](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/AgendamentoConsultas.png)
 
 ### 2.Médico
 
@@ -181,19 +181,19 @@ Os pacientes podem efetuar o agendamento de suas consultas médicas.:
 Os médicos que desejarem atender pacientes por meio da plataforma
 devem primeiro efetuar um cadastro.:
 
-![Cadastro de Medico](doc/assets/img/useCases/CadastroMedico.png)
+![Cadastro de Medico](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroMedico.png)
 
 #### 2.2 Cadastro de Horário para Atendimento
 
 Os médicos podem efetuar o cadastro de seus horários livres para atendimento.:
 
-![Cadastro de Horario](doc/assets/img/useCases/CadastroHorario.png)
+![Cadastro de Horario](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/CadastroHorario.png)
 
 #### 2.3 Atualização de Horário para Atendimento
 
 Os médicos podem efetuar a atualização de seus horários livres para atendimento.:
 
-![Atualizacao de Horario](doc/assets/img/useCases/AtualizarHorario.png)
+![Atualizacao de Horario](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/AtualizarHorario.png)
 
 ### 3. Ambos (Médicos e/ou Pacientes)
 
@@ -201,14 +201,14 @@ Os médicos podem efetuar a atualização de seus horários livres para atendime
 
 Os pacientes e/ou médicos podem verificar as consultas agendadas.:
 
-![Verificar Consultas Agendadas](doc/assets/img/useCases/VerificarConsultasAgendadas.png)
+![Verificar Consultas Agendadas](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/VerificarConsultasAgendadas.png)
 
 #### 3.2 Obtenção de Horários Disponíveis para Agendamento
 
 Os pacientes e/ou médicos podem verificar os horários disponíveis para agendamento de
 consultas.:
 
-![Verificar Horários](doc/assets/img/useCases/VerificarHorarios.png)
+![Verificar Horários](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/VerificarHorarios.png)
 
 ## Envio de Emails
 
@@ -223,4 +223,4 @@ usuários.
 
 Vide abaixo um exemplo enviado via Health&Med API.:
 
-![Exemplo Email](doc/assets/img/useCases/MailExample.png)
+![Exemplo Email](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/MailExample.png)
