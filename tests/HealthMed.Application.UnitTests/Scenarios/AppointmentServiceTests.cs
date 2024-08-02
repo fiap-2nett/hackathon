@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using HealthMed.Application.Contracts.Appointment;
@@ -171,6 +172,247 @@ namespace HealthMed.Application.UnitTests.Scenarios
             testResult.TotalCount.Should().Be(expectedAppointmentList.Count());
 
             _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+        }
+
+        #endregion
+
+        #region ReserveAsync
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowNotFoundException_WhenInvalidIdUserDoctor()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userPatient.Id ? userPatient : null);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<NotFoundException>()
+                .WithMessage(DomainErrors.User.NotFound.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Never);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Never);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowNotFoundException_WhenInvalidIdUserPatient()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : null);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<NotFoundException>()
+                .WithMessage(DomainErrors.User.NotFound.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Never);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Never);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowNotFoundException_WhenInvalidIdAppointment()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Appointment)null);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : userPatient);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<NotFoundException>()
+                .WithMessage(DomainErrors.Appointment.NotFound.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Never);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowDomainAppointmentOverlapException_WhenIsOverllapingAppointment()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(true);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : userPatient);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<DomainException>()
+                .WithMessage(DomainErrors.Appointment.Overlap.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowInvalidPermissionExceptionException_WhenAppointmentDateLessThanDateTimeNow()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : userPatient);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<InvalidPermissionException>()
+                .WithMessage(DomainErrors.Appointment.RetroactiveReserve.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_ThrowInvalidPermissionExceptionException_WhenAppointmentIsNotAvailable()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList().Where(x => x.IdDoctor == userDoctor.Id && x.IdAppointmentStatus == (byte)Enums.AppointmentStatus.Busy).FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : userPatient);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            var action = () => appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            await action.Should()
+                .ThrowAsync<InvalidPermissionException>()
+                .WithMessage(DomainErrors.Appointment.CannotBeReserved.Message);
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReserveAsync_Should_Return_WhenValidParameters()
+        {
+            // Arrange
+            var userDoctor = DoctorA;
+            var userPatient = PatientA;
+            var targetAppointment = AppointmentsList()
+                .Where(x =>
+                    x.IdDoctor == userDoctor.Id &&
+                    x.AppointmentDate > DateTime.Now.WithoutSeconds() &&
+                    x.IdAppointmentStatus == (byte)Enums.AppointmentStatus.Available
+                )
+                .FirstOrDefault();
+
+            _dbContextMock.Setup(x => x.Set<Appointment, int>()).ReturnsDbSet(AppointmentsList());
+            _dbContextMock.Setup(x => x.Set<AppointmentStatus, byte>()).ReturnsDbSet(AppointmentStatusList());
+            _appointmentRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(targetAppointment);
+            _appointmentRepositoryMock.Setup(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int idUser) => idUser == userDoctor.Id ? userDoctor : userPatient);
+            _mailServiceMock.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+
+            var appointmentService = new AppointmentService(_dbContextMock.Object, _unitOfWorkMock.Object,
+                _mailServiceMock.Object, _userRepositoryMock.Object, _appointmentRepositoryMock.Object);
+
+            // Act
+            await appointmentService.ReserveAsync(targetAppointment.Id, userDoctor.Id, userPatient.Id);
+
+            // Assert
+            targetAppointment.IdPatient.Should().Be(userPatient.Id);
+            targetAppointment.HasBeenNotified.Should().BeTrue();
+            targetAppointment.IdAppointmentStatus.Should().Be((byte)Enums.AppointmentStatus.Busy);            
+
+            _userRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Exactly(2));
+            _appointmentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once);
+            _appointmentRepositoryMock.Verify(x => x.IsOverlappingAsync(It.IsAny<int>(), It.IsAny<DateTime>()), Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _mailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
         #endregion
