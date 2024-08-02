@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using HealthMed.Application.Core.Abstractions.Data;
 using HealthMed.Application.Services;
 using HealthMed.Application.UnitTests.TestEntities;
@@ -16,20 +17,12 @@ using HealthMed.Infrastructure.Cryptography;
 using Moq;
 using Moq.EntityFrameworkCore;
 using Xunit;
-using FluentAssertions;
-using static System.Collections.Specialized.BitVector32;
 
 namespace HealthMed.Application.UnitTests.Scenarios
 {
     public sealed class ScheduleServiceTest
     {
         #region Read-Only Fields
-
-        private readonly IDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IScheduleRepository _scheduleRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly IAppointmentRepository _appointmentRepository;
 
         private readonly Mock<IDbContext> _dbContextMock;
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
@@ -217,7 +210,7 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id)).ReturnsAsync(user);
 
             // Act
-            var action =  () => _schedulesService.CreateAsync(user.Id, schedules);
+            var action = () => _schedulesService.CreateAsync(user.Id, schedules);
 
             // Assert
             await action.Should()
@@ -425,8 +418,6 @@ namespace HealthMed.Application.UnitTests.Scenarios
             _scheduleRepositoryMock.Verify(x => x.GetByIdAsync(scheduleId), Times.Once);
             _unitOfWorkMock.Verify(x => x.SaveChangesAsync(default), Times.Never);
         }
-
-
 
         #endregion
 
