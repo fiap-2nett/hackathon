@@ -223,4 +223,4 @@ usuários.
 
 Vide abaixo um exemplo enviado via Health&Med API.:
 
-![Exemplo Email](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/MailExample.png)
+![Exemplo Email](https://github.com/fiap-2nett/hackathon/blob/readme/doc/assets/img/useCases/mailExample.png)
