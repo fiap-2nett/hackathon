@@ -49,6 +49,7 @@ Stakeholders da Health&Med e pode ser encontrada em.:
 ## Arquitetura, Padrões Arquiteturais e Convenções
 
 - REST Api
+- Clean Architecture
 - Domain-Driven Design
 - EF Code-first
 - Service Pattern
