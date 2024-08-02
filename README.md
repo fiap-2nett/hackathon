@@ -152,7 +152,7 @@ $ dotnet test --logger "console;verbosity=detailed" <arquivo_do_projeto_do_teste
 
 ## Casos de Uso
 
-Abaixo temos alguns cenários disponíveis onde a plataforma Health&Med API deve 
+Abaixo temos alguns cenários disponíveis que descrevem como a plataforma Health&Med API pode 
 ser utilizada.:
 
 **ATENÇÃO**.: ***O Health&Med Portal está nos fluxos apenas para facilitar o entendimento dos Casos de Uso,
