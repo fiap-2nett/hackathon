@@ -8,8 +8,8 @@ para consultas.
 
 ## Clean Architecture
 
-O Health&Med API é altamente baseado em Clean Architecture (Arquitetura Limpa),
-ou seja, projetado com foco na separação de preocupações e na dependência de
+A Health&Med API é altamente baseada em Clean Architecture (Arquitetura Limpa),
+ou seja, projetada com foco na separação de preocupações e na dependência de
 direção única, o que significa que as partes mais internas do sistema não
 conhecem as partes mais externas.
 
